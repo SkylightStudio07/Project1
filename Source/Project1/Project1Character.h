@@ -21,6 +21,9 @@ public:
     UPROPERTY(VisibleAnywhere, Category = Weapon)
         USkeletalMeshComponent* Weapon;
 
+    UPROPERTY(EditDefaultsOnly, Category = Projectile)
+        TSubclassOf<class AProject1Projectile> ProjectileClass;
+
 protected:
     virtual void BeginPlay() override;
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -51,6 +54,9 @@ protected:
     float BaseLookUpRate;
 
     void OnRightMouseButtonPressed();
+
+    void Fire();
+
 
     void PlayAimAnimation();
 

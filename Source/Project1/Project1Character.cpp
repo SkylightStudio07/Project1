@@ -8,6 +8,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "Project1AnimInstance.h"
+#include "Project1Projectile.h"
 #include "Engine/SkeletalMesh.h"
 #include "GameFramework/SpringArmComponent.h"
 
@@ -58,8 +59,11 @@ AProject1Character::AProject1Character()
         UE_LOG(LogTemp, Error, TEXT("Can't Found Weapon!"));
     }
 
-    FName WeaponSocket(TEXT("hand_r"));
+    // 무기를 캐릭터 메시에 부착합니다.
+    FName WeaponSocket(TEXT("thumb_01_r"));
     Weapon->SetupAttachment(GetMesh(), WeaponSocket);
+
+    // 무기를 특정 각도로 회전시킵니다.
 
 }
 
@@ -87,6 +91,7 @@ void AProject1Character::SetupPlayerInputComponent(class UInputComponent* Player
 
     // 조준
     PlayerInputComponent->BindAction("Aim", IE_Pressed, this, &AProject1Character::OnRightMouseButtonPressed);
+    PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AProject1Character::Fire);
 }
 
 void AProject1Character::BeginPlay()
@@ -99,6 +104,44 @@ void AProject1Character::BeginPlay()
     if (!PlayerAnimInstance)
     {
         UE_LOG(LogTemp, Error, TEXT("Failed to initialize PlayerAnimInstance!"));
+    }
+
+    FRotator WeaponRotation = FRotator(0.0f, 90.0f, 0.0f); // 회전하려는 각도를 설정합니다.
+    Weapon->SetRelativeRotation(WeaponRotation); // 무기를 설정한 각도로 회전시킵니다.
+
+    // 디버그 출력을 추가하여 무기의 회전 값을 확인합니다.
+    UE_LOG(LogTemp, Warning, TEXT("Weapon Relative Rotation: %s"), *Weapon->GetRelativeRotation().ToString());
+}
+
+void AProject1Character::Fire()
+{
+    if (ProjectileClass != nullptr)
+    {
+        // 총구 위치와 방향을 가져옵니다.
+        FVector MuzzleLocation = Weapon->GetSocketLocation(TEXT("MuzzleFlash"));
+        FRotator MuzzleRotation = Weapon->GetSocketRotation(TEXT("MuzzleFlash"));
+
+        // 총알이 발사될 방향을 총의 방향으로 설정합니다.
+        FVector MuzzleDirection = MuzzleRotation.Vector();
+
+        // 디버그 출력문을 사용하여 위치와 방향을 확인합니다.
+        UE_LOG(LogTemp, Warning, TEXT("Firing projectile at Location: %s, Direction: %s"), *MuzzleLocation.ToString(), *MuzzleDirection.ToString());
+
+        // 총알을 생성하고 발사합니다.
+        FActorSpawnParameters SpawnParams;
+        SpawnParams.Owner = this;
+        SpawnParams.Instigator = GetInstigator();
+        AProject1Projectile* Projectile = GetWorld()->SpawnActor<AProject1Projectile>(ProjectileClass, MuzzleLocation, MuzzleDirection.Rotation(), SpawnParams);
+        if (Projectile)
+        {
+            // 총알을 발사합니다.
+            Projectile->FireInDirection(MuzzleDirection);
+        }
+        else
+        {
+            // 총알 생성 실패 시 처리
+            UE_LOG(LogTemp, Error, TEXT("Failed to spawn projectile!"));
+        }
     }
 }
 
