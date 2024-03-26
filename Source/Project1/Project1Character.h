@@ -5,6 +5,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Project1AnimInstance.h"
+#include "GunAnimInstance.h"
 #include "Project1Character.generated.h"
 
 UCLASS(Blueprintable)
@@ -23,6 +24,18 @@ public:
 
     UPROPERTY(EditDefaultsOnly, Category = Projectile)
         TSubclassOf<class AProject1Projectile> ProjectileClass;
+    
+    UFUNCTION(BlueprintCallable)
+    void Fire();
+
+    UFUNCTION(BlueprintCallable)
+        void PlayRifleFireMontage();
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Fire")
+        UAnimBlueprint* RifleAnimBlueprint;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Fire")
+        class UAnimMontage* RifleFireMontage;
 
 protected:
     virtual void BeginPlay() override;
@@ -55,10 +68,18 @@ protected:
 
     void OnRightMouseButtonPressed();
 
-    void Fire();
-
-
-    void PlayAimAnimation();
+    void OnLeftMouseButtonPressed();
+    void OnLeftMouseButtonReleased();
 
     class UProject1AnimInstance* PlayerAnimInstance;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Fire")
+        bool bIsFiring;
+
+    // 총 애니메이션 인스턴스
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Fire")
+        UAnimInstance* GunAnimInstance;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Fire")
+        class UAnimInstance* RifleAnimInstance;
 };

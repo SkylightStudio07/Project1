@@ -1,4 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -20,8 +19,15 @@ public:
 
 	// IsAiming Setter 함수
 	void SetIsAiming(bool bNewIsAiming);
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Battle, meta = (AllowPrivateAccess = "true"))
 		bool IsAiming;
+
+	// IsAiming Setter 함수
+	void SetIsFiring(bool bNewIsFiring);
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Battle, meta = (AllowPrivateAccess = "true"))
+		bool IsFiring;
 
 protected :
 };

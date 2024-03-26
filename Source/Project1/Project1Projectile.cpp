@@ -36,6 +36,7 @@ AProject1Projectile::AProject1Projectile()
     ProjectileMovementComponent->MaxSpeed = 3000.f;
     ProjectileMovementComponent->bRotationFollowsVelocity = true;
     ProjectileMovementComponent->bShouldBounce = false;
+
 }
 
 // Called when the game starts or when spawned
@@ -50,11 +51,6 @@ void AProject1Projectile::Tick(float DeltaTime)
     Super::Tick(DeltaTime);
 }
 
-// Function to initialize the projectile's velocity in the shoot direction.
-void AProject1Projectile::FireInDirection(const FVector& ShootDirection)
-{
-    ProjectileMovementComponent->Velocity = ShootDirection * ProjectileMovementComponent->InitialSpeed;
-}
 
 void AProject1Projectile::FireInDirection(const FVector& ShootDirection)
 {

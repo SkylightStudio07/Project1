@@ -8,6 +8,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "Project1AnimInstance.h"
+#include "GunAnimInstance.h"
 #include "Project1Projectile.h"
 #include "Engine/SkeletalMesh.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -65,6 +66,25 @@ AProject1Character::AProject1Character()
 
     // 무기를 특정 각도로 회전시킵니다.
 
+    static ConstructorHelpers::FClassFinder<UAnimInstance> AnimBP_ClassFinder(TEXT("/Game/MilitaryWeapSilver/Weapons/RifleAnimBlueprint.RifleAnimBlueprint_C"));
+    if (AnimBP_ClassFinder.Succeeded())
+    {
+        // 찾은 애니메이션 클래스를 사용하여 Weapon의 애니메이션 클래스를 설정합니다.
+        Weapon->SetAnimInstanceClass(AnimBP_ClassFinder.Class);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("Failed to find RifleAnimBlueprint!"));
+    }
+    RifleAnimInstance = Cast<UAnimInstance>(AnimBP_ClassFinder.Class->GetDefaultObject());
+    if (RifleAnimInstance)
+    {
+        UE_LOG(LogTemp, Error, TEXT("Successfully created RifleAnimInstance"));
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("Failed to create RifleAnimInstance!"));
+    }
 }
 
 void AProject1Character::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
@@ -91,7 +111,8 @@ void AProject1Character::SetupPlayerInputComponent(class UInputComponent* Player
 
     // 조준
     PlayerInputComponent->BindAction("Aim", IE_Pressed, this, &AProject1Character::OnRightMouseButtonPressed);
-    PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AProject1Character::Fire);
+    PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AProject1Character::OnLeftMouseButtonPressed);
+    PlayerInputComponent->BindAction("Fire", IE_Released, this, &AProject1Character::OnLeftMouseButtonReleased);
 }
 
 void AProject1Character::BeginPlay()
@@ -111,6 +132,7 @@ void AProject1Character::BeginPlay()
 
     // 디버그 출력을 추가하여 무기의 회전 값을 확인합니다.
     UE_LOG(LogTemp, Warning, TEXT("Weapon Relative Rotation: %s"), *Weapon->GetRelativeRotation().ToString());
+
 }
 
 void AProject1Character::Fire()
@@ -124,18 +146,23 @@ void AProject1Character::Fire()
         // 총알이 발사될 방향을 총의 방향으로 설정합니다.
         FVector MuzzleDirection = MuzzleRotation.Vector();
 
-        // 디버그 출력문을 사용하여 위치와 방향을 확인합니다.
-        UE_LOG(LogTemp, Warning, TEXT("Firing projectile at Location: %s, Direction: %s"), *MuzzleLocation.ToString(), *MuzzleDirection.ToString());
-
         // 총알을 생성하고 발사합니다.
         FActorSpawnParameters SpawnParams;
         SpawnParams.Owner = this;
         SpawnParams.Instigator = GetInstigator();
         AProject1Projectile* Projectile = GetWorld()->SpawnActor<AProject1Projectile>(ProjectileClass, MuzzleLocation, MuzzleDirection.Rotation(), SpawnParams);
+        bIsFiring = true;
+
         if (Projectile)
         {
             // 총알을 발사합니다.
             Projectile->FireInDirection(MuzzleDirection);
+
+            // 총알 발사 시 애니메이션 상태 변경
+            if (PlayerAnimInstance != nullptr)
+            {
+                PlayerAnimInstance->SetIsFiring(bIsFiring);
+            }
         }
         else
         {
@@ -143,7 +170,13 @@ void AProject1Character::Fire()
             UE_LOG(LogTemp, Error, TEXT("Failed to spawn projectile!"));
         }
     }
+    else
+    {
+        bIsFiring = false;
+        }
+    
 }
+    
 
 void AProject1Character::TouchStarted(ETouchIndex::Type FingerIndex, FVector Location)
 {
@@ -283,7 +316,41 @@ void AProject1Character::OnRightMouseButtonPressed()
 
 }
 
-void AProject1Character::PlayAimAnimation()
+void AProject1Character::OnLeftMouseButtonPressed()
 {
+    // 마우스 왼쪽 버튼이 눌렸을 때
+    bIsFiring = true; // 사격 여부를 true로 설정
+    PlayRifleFireMontage();
+    if (PlayerAnimInstance != nullptr)
+    {
+        // GunAnimInstance->GunIsFiring = true;   
+        PlayerAnimInstance->SetIsFiring(bIsFiring);
+        // UE_LOG(LogTemp, Warning, TEXT("%d"), GunAnimInstance->IsGunFiring());
+        Fire();      
+    }
+}
 
+void AProject1Character::OnLeftMouseButtonReleased()
+{
+    // 마우스 왼쪽 버튼이 떼어졌을 때
+    bIsFiring = false; // 사격 여부를 false로 설정
+    if (PlayerAnimInstance != nullptr)
+    {
+        PlayerAnimInstance->SetIsFiring(bIsFiring);
+        // GunAnimInstance->GunIsFiring = false;
+        // UE_LOG(LogTemp, Warning, TEXT("%d"), GunAnimInstance->IsGunFiring());
+    }
+}
+
+void AProject1Character::PlayRifleFireMontage()
+{
+    if (RifleAnimInstance != nullptr)
+    {
+        UE_LOG(LogTemp, Error, TEXT("Playing Montage"));
+        RifleAnimInstance->Montage_Play(RifleFireMontage);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("RifleAnimInstance is null! Cannot play RifleFire montage."));
+    }
 }

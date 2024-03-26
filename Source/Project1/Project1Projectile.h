@@ -31,6 +31,4 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement")
         UProjectileMovementComponent* ProjectileMovementComponent;
 
-    void FireInDirection(const FVector& ShootDirection);
-
 };
