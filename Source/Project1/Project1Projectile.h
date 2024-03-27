@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// AProject1Projectile.h ÆÄÀÏ
 
 #pragma once
 
@@ -30,5 +30,9 @@ public:
     // Projectile movement component.
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement")
         UProjectileMovementComponent* ProjectileMovementComponent;
+
+    // Function to handle projectile collision.
+    UFUNCTION()
+        void OnProjectileHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
 };

@@ -37,9 +37,13 @@ public:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Fire")
         class UAnimMontage* RifleFireMontage;
 
+    void StopFiring();
+
 protected:
     virtual void BeginPlay() override;
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+    FTimerHandle FireTimerHandle;
 
     void TouchStarted(ETouchIndex::Type FingerIndex, FVector Location);
     void TouchStopped(ETouchIndex::Type FingerIndex, FVector Location);
@@ -78,7 +82,7 @@ protected:
 
     // 총 애니메이션 인스턴스
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Fire")
-        UAnimInstance* GunAnimInstance;
+        UGunAnimInstance* GunAnimInstance;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Fire")
         class UAnimInstance* RifleAnimInstance;

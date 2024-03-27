@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// AProject1Projectile.cpp 파일
 
 #include "Project1Projectile.h"
 #include "Components/SphereComponent.h"
@@ -37,6 +37,8 @@ AProject1Projectile::AProject1Projectile()
     ProjectileMovementComponent->bRotationFollowsVelocity = true;
     ProjectileMovementComponent->bShouldBounce = false;
 
+    // Set up collision function to handle projectile hits
+    SphereComponent->OnComponentHit.AddDynamic(this, &AProject1Projectile::OnProjectileHit);
 }
 
 // Called when the game starts or when spawned
@@ -51,12 +53,18 @@ void AProject1Projectile::Tick(float DeltaTime)
     Super::Tick(DeltaTime);
 }
 
+// Function to handle projectile collision.
+void AProject1Projectile::OnProjectileHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+{
+    // Destroy this projectile upon collision
+    Destroy();
+}
 
 void AProject1Projectile::FireInDirection(const FVector& ShootDirection)
 {
-    // 총알의 방향을 설정합니다.
+    // Set the direction of the projectile
     SetActorRotation(ShootDirection.Rotation());
 
-    // 총알의 속도를 설정합니다.
+    // Set the velocity of the projectile
     ProjectileMovementComponent->Velocity = ShootDirection * ProjectileMovementComponent->InitialSpeed;
 }
