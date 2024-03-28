@@ -359,7 +359,6 @@ void AProject1Character::PlayRifleFireMontage()
 {
     if (RifleAnimInstance != nullptr)
     {
-        UE_LOG(LogTemp, Error, TEXT("Playing Montage"));
         RifleAnimInstance->Montage_Play(RifleFireMontage);
     }
     else

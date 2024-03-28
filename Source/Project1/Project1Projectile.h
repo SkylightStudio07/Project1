@@ -1,10 +1,11 @@
-// AProject1Projectile.h 파일
+// Project1Projectile.h
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/ProjectileMovementComponent.h"
+#include "Components/SphereComponent.h" // Sphere 컴포넌트 헤더 추가
 #include "Project1Projectile.generated.h"
 
 UCLASS()
@@ -31,8 +32,17 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement")
         UProjectileMovementComponent* ProjectileMovementComponent;
 
-    // Function to handle projectile collision.
+    // Collision component.
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Collision")
+        USphereComponent* CollisionComponent; // RootComponent로 사용할 구체 컴포넌트
+
+        // Function to handle projectile collision.
+
     UFUNCTION()
-        void OnProjectileHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+        void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, FVector NormalImpulse, const FHitResult& Hit);
+
+    // Damage amount to apply to the enemy
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Damage")
+        float DamageAmount;
 
 };

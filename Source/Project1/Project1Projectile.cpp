@@ -1,6 +1,7 @@
-// AProject1Projectile.cpp ÆÄÀÏ
+// Project1Projectile.cpp
 
 #include "Project1Projectile.h"
+#include "Project1Enemy.h"
 #include "Components/SphereComponent.h"
 
 // Sets default values
@@ -10,10 +11,12 @@ AProject1Projectile::AProject1Projectile()
     PrimaryActorTick.bCanEverTick = true;
 
     // Create a sphere component as the root component
-    USphereComponent* SphereComponent = CreateDefaultSubobject<USphereComponent>(TEXT("RootComponent"));
-    RootComponent = SphereComponent;
-    SphereComponent->InitSphereRadius(5.0f); // Adjust the radius as needed
+    CollisionComponent = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComponent"));
+    CollisionComponent->InitSphereRadius(15.0f);
+    RootComponent = CollisionComponent; // Adjust the radius as needed
 
+    // Set collision profile for the sphere component
+    CollisionComponent->BodyInstance.SetCollisionProfileName(TEXT("Projectile"));
     // Create a static mesh component
     UStaticMeshComponent* MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComponent"));
     MeshComponent->SetupAttachment(RootComponent); // Attach the mesh component to the root component
@@ -38,7 +41,9 @@ AProject1Projectile::AProject1Projectile()
     ProjectileMovementComponent->bShouldBounce = false;
 
     // Set up collision function to handle projectile hits
-    SphereComponent->OnComponentHit.AddDynamic(this, &AProject1Projectile::OnProjectileHit);
+    CollisionComponent->OnComponentHit.AddDynamic(this, &AProject1Projectile::OnHit);
+    // Set default damage amount
+    DamageAmount = 50.0f; // Adjust as needed
 }
 
 // Called when the game starts or when spawned
@@ -53,11 +58,24 @@ void AProject1Projectile::Tick(float DeltaTime)
     Super::Tick(DeltaTime);
 }
 
-// Function to handle projectile collision.
-void AProject1Projectile::OnProjectileHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+void AProject1Projectile::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, FVector NormalImpulse, const FHitResult& Hit)
 {
-    // Destroy this projectile upon collision
-    Destroy();
+    FString OtherActorName = OtherActor ? OtherActor->GetName() : FString(TEXT("Unknown"));
+
+    // Log the name of the other actor
+    UE_LOG(LogTemp, Warning, TEXT("Projectile has hit an enemy: %s"), *OtherActorName);
+    if (OtherActor != this)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Best!"));
+        AProject1Enemy* Enemy = Cast<AProject1Enemy>(OtherActor);
+        // Apply damage to the enemy
+        if (Enemy) {
+            Enemy->TakeDamage(DamageAmount, FDamageEvent(), GetInstigatorController(), this);
+        }
+
+        // Destroy the projectile upon hitting the enemy
+        Destroy();
+    }
 }
 
 void AProject1Projectile::FireInDirection(const FVector& ShootDirection)
