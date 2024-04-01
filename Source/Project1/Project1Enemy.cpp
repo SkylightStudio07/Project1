@@ -7,6 +7,7 @@
 #include "EnemyAnimInstance.h"
 #include "Kismet/GameplayStatics.h"
 #include "DrawDebugHelpers.h"
+#include "Components/WidgetComponent.h"
 
 // Sets default values
 AProject1Enemy::AProject1Enemy()
@@ -27,6 +28,19 @@ AProject1Enemy::AProject1Enemy()
     {
         UE_LOG(LogTemp, Error, TEXT("Failed to load ZombieScreamMontage!"));
     }
+
+    HPBarWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("HPBARWIDGET"));
+    HPBarWidget->SetupAttachment(GetMesh());
+    HPBarWidget->SetRelativeLocation(FVector(0.0F, 0.0F, 180.0F));
+    HPBarWidget->SetRelativeRotation(FQuat(FRotator(0.0f, 0.0f, 90.0f)));
+    HPBarWidget->SetWidgetSpace(EWidgetSpace::World);
+    static ConstructorHelpers::FClassFinder<UUserWidget> UI_HUD(TEXT("/Game/Blueprints/EnemyHPBar.EnemyHPBar_C"));
+    if (UI_HUD.Succeeded()) {
+        HPBarWidget->SetWidgetClass(UI_HUD.Class);
+        HPBarWidget->SetDrawSize(FVector2D(150.0F, 50.0F));
+    }
+
+
 }
 
 // Called when the game starts or when spawned

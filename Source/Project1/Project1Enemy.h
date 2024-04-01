@@ -37,6 +37,9 @@ public:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation", Meta = (AllowPrivateAccess = true))
     UEnemyAnimInstance* AnimInstance;
 
+    UPROPERTY(VisibleAnywhere, Category = "UI")
+        class UWidgetComponent* HPBarWidget;
+
 protected:
     // Called when the game starts or when spawned
     virtual void BeginPlay() override;
