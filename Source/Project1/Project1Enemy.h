@@ -37,12 +37,21 @@ public:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation", Meta = (AllowPrivateAccess = true))
     UEnemyAnimInstance* AnimInstance;
 
-    UPROPERTY(VisibleAnywhere, Category = "UI")
-        class UWidgetComponent* HPBarWidget;
+    UPROPERTY()
+        class UEnemyHPWidget* EnemyHPWidget;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI")
+        TSubclassOf<UEnemyHPWidget> EnemyHPBarWidgetClass;
+
+    UPROPERTY()
+        class UProgressBar* HPProgressBar;
+
+    float MaxHP;
 
 protected:
     // Called when the game starts or when spawned
     virtual void BeginPlay() override;
+    
 
 public:
     // Called every frame
@@ -58,6 +67,9 @@ public:
     virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
     void DrawVisionCone();
+
+    void UpdateUIPosition();
+    
 
 private:
     // Target location for enemy movement

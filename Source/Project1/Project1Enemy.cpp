@@ -8,6 +8,8 @@
 #include "Kismet/GameplayStatics.h"
 #include "DrawDebugHelpers.h"
 #include "Components/WidgetComponent.h"
+#include "EnemyHPWidget.h"
+#include "Components/ProgressBar.h"
 
 // Sets default values
 AProject1Enemy::AProject1Enemy()
@@ -18,6 +20,7 @@ AProject1Enemy::AProject1Enemy()
     RecogDistance = 500.0f; // 인지범위
     EnemyMoveSpeed = 200.0f; 
     EnemyHP = 100.0f; 
+    MaxHP = EnemyHP;
 
     static ConstructorHelpers::FObjectFinder<UAnimMontage> ZombieScreamMontageAsset(TEXT("/Game/Enemies/ZombieScreamMontage.ZombieScreamMontage"));
     if (ZombieScreamMontageAsset.Succeeded())
@@ -29,16 +32,21 @@ AProject1Enemy::AProject1Enemy()
         UE_LOG(LogTemp, Error, TEXT("Failed to load ZombieScreamMontage!"));
     }
 
+    /* 이제 HPBar은 EnemyHPWidget.h에서 관리함
     HPBarWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("HPBARWIDGET"));
     HPBarWidget->SetupAttachment(GetMesh());
     HPBarWidget->SetRelativeLocation(FVector(0.0F, 0.0F, 180.0F));
-    HPBarWidget->SetRelativeRotation(FQuat(FRotator(0.0f, 0.0f, 90.0f)));
+    HPBarWidget->SetRelativeRotation(FQuat(FRotator(0.0f, 0.0f, 0.0f)));
     HPBarWidget->SetWidgetSpace(EWidgetSpace::World);
     static ConstructorHelpers::FClassFinder<UUserWidget> UI_HUD(TEXT("/Game/Blueprints/EnemyHPBar.EnemyHPBar_C"));
     if (UI_HUD.Succeeded()) {
         HPBarWidget->SetWidgetClass(UI_HUD.Class);
         HPBarWidget->SetDrawSize(FVector2D(150.0F, 50.0F));
     }
+    else {
+        UE_LOG(LogTemp, Error, TEXT("Failed to load HPBARWIDGET!"));
+    }
+    */
 
 
 }
@@ -51,6 +59,54 @@ void AProject1Enemy::BeginPlay()
     // Set initial target location for enemy movement
     TargetMovementLocation = GetActorLocation();
     AnimInstance = Cast<UEnemyAnimInstance>(GetMesh()->GetAnimInstance());
+
+    if (EnemyHPBarWidgetClass)
+    {
+        EnemyHPWidget = CreateWidget<UEnemyHPWidget>(GetWorld(), EnemyHPBarWidgetClass);
+        if (EnemyHPWidget)
+        {
+            // 뷰포트에 위젯을 추가합니다.
+            EnemyHPWidget->AddToViewport();
+            // ProgressBar를 찾아서 설정합니다.
+            HPProgressBar = Cast<UProgressBar>(EnemyHPWidget->GetWidgetFromName(TEXT("HPProgressBar")));
+            HPProgressBar->SetPercent(1.0f);
+            if (!HPProgressBar)
+            {
+                UE_LOG(LogTemp, Error, TEXT("Failed to find HPProgressBar in EnemyHPWidget"));
+            }
+        }
+        else
+        {
+            UE_LOG(LogTemp, Error, TEXT("Failed to create EnemyHPWidget"));
+        }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("EnemyHPBarWidgetClass is nullptr"));
+    }
+
+}
+
+void AProject1Enemy::UpdateUIPosition()
+{
+    if (EnemyHPWidget)
+    {
+        // 적의 위치를 스크린 좌표로 변환
+        FVector2D ScreenPosition;
+        UGameplayStatics::ProjectWorldToScreen(GetWorld()->GetFirstPlayerController(), GetActorLocation(), ScreenPosition);
+
+        // UI의 위치를 적의 스크린 좌표로 설정
+        int32 ViewportSizeX, ViewportSizeY;
+        GetWorld()->GetFirstPlayerController()->GetViewportSize(ViewportSizeX, ViewportSizeY);
+        FVector2D ViewportSize(ViewportSizeX, ViewportSizeY);
+        FVector2D WidgetOffset = FVector2D(0.0f, -50.0f); // 적의 위쪽으로 UI를 조금 올립니다.
+        FVector2D FinalPosition = ScreenPosition + WidgetOffset;
+
+        // UI 위치를 설정합니다.
+        FVector2D AnchorPoint = FVector2D(0.5f, 0.5f); // UI의 중앙을 기준으로 위치를 설정합니다.
+        EnemyHPWidget->SetPositionInViewport(FinalPosition, true);
+        EnemyHPWidget->SetAlignmentInViewport(AnchorPoint);
+    }
 }
 
 // Called every frame
@@ -123,6 +179,7 @@ void AProject1Enemy::Tick(float DeltaTime)
             IsScreaming = false; // Reset the flag if the player is out of range
         }
     }
+    UpdateUIPosition();
 }
 
 // Called to bind functionality to input
@@ -154,9 +211,17 @@ float AProject1Enemy::TakeDamage(float DamageAmount, struct FDamageEvent const& 
     // Log the amount of damage taken
     UE_LOG(LogTemp, Warning, TEXT("Enemy took %f damage. Current HP: %f"), ActualDamage, EnemyHP);
 
+    float CurrentHP = FMath::Clamp(EnemyHP, 0.0f, MaxHP);
+    float Percentage = CurrentHP / MaxHP;
+    HPProgressBar->SetPercent(Percentage);
+
     // Check if the enemy's health is depleted
     if (EnemyHP <= 0)
     {
+        if (EnemyHPWidget)
+        {
+            EnemyHPWidget->SetVisibility(ESlateVisibility::Hidden);
+        }
         // Handle enemy death
         Destroy();
     }
