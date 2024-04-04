@@ -6,6 +6,7 @@
 #include "Camera/CameraComponent.h"
 #include "Project1AnimInstance.h"
 #include "GunAnimInstance.h"
+#include "PlayerHUD.h"
 #include "Project1Character.generated.h"
 
 UCLASS(Blueprintable)
@@ -38,6 +39,17 @@ public:
         class UAnimMontage* RifleFireMontage;
 
     void StopFiring();
+    void UpdateAmmoText(int32 RemainingAmmo);
+    void ReloadManager();
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Fire")
+        int32 Bullets;
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Fire")
+        bool CanFire;
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Fire")
+        bool isReloading;
+
+    void ItemPickup();
 
 protected:
     virtual void BeginPlay() override;
@@ -71,7 +83,6 @@ protected:
     float BaseLookUpRate;
 
     void OnRightMouseButtonPressed();
-
     void OnLeftMouseButtonPressed();
     void OnLeftMouseButtonReleased();
 
@@ -86,4 +97,11 @@ protected:
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Fire")
         class UAnimInstance* RifleAnimInstance;
+
+    // PlayerHUD 멤버 변수 추가
+    UPROPERTY(EditDefaultsOnly, Category = "UI")
+        TSubclassOf<UPlayerHUD> PlayerHUDClass;
+
+    // 생성된 PlayerHUD 인스턴스를 보관하기 위한 변수
+    UPlayerHUD* PlayerHUDInstance;
 };

@@ -10,6 +10,7 @@
 #include "Project1AnimInstance.h"
 #include "GunAnimInstance.h"
 #include "Project1Projectile.h"
+#include "PlayerHUD.h"
 #include "Engine/SkeletalMesh.h"
 #include "GameFramework/SpringArmComponent.h"
 
@@ -69,7 +70,6 @@ AProject1Character::AProject1Character()
     static ConstructorHelpers::FClassFinder<UAnimInstance> AnimBP_ClassFinder(TEXT("/Game/MilitaryWeapSilver/Weapons/RifleAnimBlueprint.RifleAnimBlueprint_C"));
     if (AnimBP_ClassFinder.Succeeded())
     {
-        // 찾은 애니메이션 클래스를 사용하여 Weapon의 애니메이션 클래스를 설정합니다.
         Weapon->SetAnimInstanceClass(AnimBP_ClassFinder.Class);
         GunAnimInstance = Cast<UGunAnimInstance>(Weapon->GetAnimInstance());
     }
@@ -77,16 +77,10 @@ AProject1Character::AProject1Character()
     {
         UE_LOG(LogTemp, Error, TEXT("Failed to find RifleAnimBlueprint!"));
     }
-
     RifleAnimInstance = Cast<UAnimInstance>(AnimBP_ClassFinder.Class->GetDefaultObject());
-    if (RifleAnimInstance)
-    {
-        UE_LOG(LogTemp, Error, TEXT("Successfully created RifleAnimInstance"));
-    }
-    else
-    {
-        UE_LOG(LogTemp, Error, TEXT("Failed to create RifleAnimInstance!"));
-    }
+
+    Bullets = 60;
+    CanFire = true;
 }
 
 void AProject1Character::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
@@ -142,46 +136,65 @@ void AProject1Character::BeginPlay()
         UE_LOG(LogTemp, Error, TEXT("Failed to initialize GunAnimInstance!"));
     }
 
-}
-
-void AProject1Character::Fire()
-{
-    if (ProjectileClass != nullptr)
+    if (PlayerHUDClass)
     {
-        // 총구 위치와 방향을 가져옵니다.
-        FVector MuzzleLocation = Weapon->GetSocketLocation(TEXT("MuzzleFlash"));
-        FRotator MuzzleRotation = Weapon->GetSocketRotation(TEXT("MuzzleFlash"));
+        PlayerHUDInstance = CreateWidget<UPlayerHUD>(GetWorld(), PlayerHUDClass);
 
-        // 총알이 발사될 방향을 총의 방향으로 설정합니다.
-        FVector MuzzleDirection = MuzzleRotation.Vector();
-
-        // 총알을 생성하고 발사합니다.
-        FActorSpawnParameters SpawnParams;
-        SpawnParams.Owner = this;
-        SpawnParams.Instigator = GetInstigator();
-        AProject1Projectile* Projectile = GetWorld()->SpawnActor<AProject1Projectile>(ProjectileClass, MuzzleLocation, MuzzleDirection.Rotation(), SpawnParams);
-        bIsFiring = true;
-
-        if (Projectile)
+        if (PlayerHUDInstance)
         {
-            // 총알을 발사합니다.
-            Projectile->FireInDirection(MuzzleDirection);
-
-            // 총알 발사 시 애니메이션 상태 변경
-            if (PlayerAnimInstance != nullptr)
-            {
-                PlayerAnimInstance->SetIsFiring(bIsFiring);
-            }
-        }
-        else
-        {
-            // 총알 생성 실패 시 처리
-            UE_LOG(LogTemp, Error, TEXT("Failed to spawn projectile!"));
+            PlayerHUDInstance->AddToViewport(); // 화면에 추가
         }
     }
     else
     {
-        bIsFiring = false;
+        UE_LOG(LogTemp, Error, TEXT("PlayerHUD class is not set!"));
+    }
+}
+
+void AProject1Character::Fire()
+{
+    ReloadManager();
+    if (CanFire && Bullets > 0) {
+
+        if (ProjectileClass != nullptr)
+        {
+            // 총구 위치와 방향을 가져옵니다.
+            FVector MuzzleLocation = Weapon->GetSocketLocation(TEXT("MuzzleFlash"));
+            FRotator MuzzleRotation = Weapon->GetSocketRotation(TEXT("MuzzleFlash"));
+
+            // 총알이 발사될 방향을 총의 방향으로 설정합니다.
+            FVector MuzzleDirection = MuzzleRotation.Vector();
+
+            // 총알을 생성하고 발사합니다.
+            Bullets--;
+            UpdateAmmoText(Bullets);
+            FActorSpawnParameters SpawnParams;
+            SpawnParams.Owner = this;
+            SpawnParams.Instigator = GetInstigator();
+            AProject1Projectile* Projectile = GetWorld()->SpawnActor<AProject1Projectile>(ProjectileClass, MuzzleLocation, MuzzleDirection.Rotation(), SpawnParams);
+            bIsFiring = true;
+
+            if (Projectile)
+            {
+                // 총알을 발사합니다.
+                Projectile->FireInDirection(MuzzleDirection);
+
+                // 총알 발사 시 애니메이션 상태 변경
+                if (PlayerAnimInstance != nullptr)
+                {
+                    PlayerAnimInstance->SetIsFiring(bIsFiring);
+                }
+            }
+            else
+            {
+                // 총알 생성 실패 시 처리
+                UE_LOG(LogTemp, Error, TEXT("Failed to spawn projectile!"));
+            }
+        }
+        else
+        {
+            bIsFiring = false;
+        }
     }
 }
 
@@ -328,7 +341,7 @@ void AProject1Character::OnLeftMouseButtonPressed()
     // 마우스 왼쪽 버튼이 눌렸을 때
     bIsFiring = true; // 사격 여부를 true로 설정
     PlayRifleFireMontage();
-    if (PlayerAnimInstance != nullptr)
+    if (PlayerAnimInstance != nullptr && CanFire)
     {
         if (GunAnimInstance)
         {
@@ -357,13 +370,13 @@ void AProject1Character::OnLeftMouseButtonReleased()
 
 void AProject1Character::PlayRifleFireMontage()
 {
-    if (RifleAnimInstance != nullptr)
+    if (RifleAnimInstance != nullptr && CanFire)
     {
         RifleAnimInstance->Montage_Play(RifleFireMontage);
     }
     else
     {
-        UE_LOG(LogTemp, Error, TEXT("RifleAnimInstance is null! Cannot play RifleFire montage."));
+        UE_LOG(LogTemp, Error, TEXT("RifleAnimInstance is null"));
     }
 }
 
@@ -374,4 +387,27 @@ void AProject1Character::StopFiring()
     {
         PlayerAnimInstance->SetIsFiring(bIsFiring);
     }
+}
+
+void AProject1Character::UpdateAmmoText(int32 RemainingAmmo)
+{
+    if (PlayerHUDInstance)
+    {
+        PlayerHUDInstance->SetAmmoText(RemainingAmmo);
+    }
+}
+
+void AProject1Character::ReloadManager() {
+    if (Bullets == 0) {
+        
+        CanFire = false;
+    }
+    else
+    {
+        CanFire = true;
+    }
+}
+
+void AProject1Character::ItemPickup() {
+    UpdateAmmoText(Bullets);
 }
