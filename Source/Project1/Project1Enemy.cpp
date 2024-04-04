@@ -70,6 +70,7 @@ void AProject1Enemy::BeginPlay()
             // ProgressBar를 찾아서 설정합니다.
             HPProgressBar = Cast<UProgressBar>(EnemyHPWidget->GetWidgetFromName(TEXT("HPProgressBar")));
             HPProgressBar->SetPercent(1.0f);
+            EnemyHPWidget->SetVisibility(ESlateVisibility::Hidden);
             if (!HPProgressBar)
             {
                 UE_LOG(LogTemp, Error, TEXT("Failed to find HPProgressBar in EnemyHPWidget"));
@@ -97,13 +98,15 @@ void AProject1Enemy::UpdateUIPosition()
 
         // UI의 위치를 적의 스크린 좌표로 설정
         int32 ViewportSizeX, ViewportSizeY;
+
         GetWorld()->GetFirstPlayerController()->GetViewportSize(ViewportSizeX, ViewportSizeY);
         FVector2D ViewportSize(ViewportSizeX, ViewportSizeY);
-        FVector2D WidgetOffset = FVector2D(0.0f, -50.0f); // 적의 위쪽으로 UI를 조금 올립니다.
+
+        FVector2D WidgetOffset = FVector2D(0.0f, -50.0f);
         FVector2D FinalPosition = ScreenPosition + WidgetOffset;
 
         // UI 위치를 설정합니다.
-        FVector2D AnchorPoint = FVector2D(0.5f, 0.5f); // UI의 중앙을 기준으로 위치를 설정합니다.
+        FVector2D AnchorPoint = FVector2D(0.5f, 0.5f); // UI 중앙 앵커
         EnemyHPWidget->SetPositionInViewport(FinalPosition, true);
         EnemyHPWidget->SetAlignmentInViewport(AnchorPoint);
     }
@@ -234,6 +237,7 @@ void AProject1Enemy::PlayScreamAnimation()
 {
     if (ZombieScreamMontage)
     {
+        EnemyHPWidget->SetVisibility(ESlateVisibility::Visible);
         // Play the animation montage
         PlayAnimMontage(ZombieScreamMontage, 1.f, NAME_None);
 
