@@ -1,6 +1,6 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+Ôªø// Fill out your copyright notice in the Description page of Project Settings.
 
-// Project1Enemy.cpp ∆ƒ¿œ
+// Project1Enemy.cpp ÌååÏùº
 
 #include "Project1Enemy.h"
 #include "Project1Character.h"
@@ -17,10 +17,11 @@ AProject1Enemy::AProject1Enemy()
     // Set this character to call Tick() every frame
     PrimaryActorTick.bCanEverTick = true;
 
-    RecogDistance = 500.0f; // ¿Œ¡ˆπ¸¿ß
-    EnemyMoveSpeed = 200.0f; 
-    EnemyHP = 100.0f; 
+    RecogDistance = 500.0f; // Ïù∏ÏßÄÎ≤îÏúÑ
+    EnemyMoveSpeed = 200.0f;
+    EnemyHP = 100.0f;
     MaxHP = EnemyHP;
+    FieldOfView = 60.0f;
 
     static ConstructorHelpers::FObjectFinder<UAnimMontage> ZombieScreamMontageAsset(TEXT("/Game/Enemies/ZombieScreamMontage.ZombieScreamMontage"));
     if (ZombieScreamMontageAsset.Succeeded())
@@ -32,7 +33,7 @@ AProject1Enemy::AProject1Enemy()
         UE_LOG(LogTemp, Error, TEXT("Failed to load ZombieScreamMontage!"));
     }
 
-    /* ¿Ã¡¶ HPBar¿∫ EnemyHPWidget.hø°º≠ ∞¸∏Æ«‘
+    /* Ïù¥Ï†ú HPBarÏùÄ EnemyHPWidget.hÏóêÏÑú Í¥ÄÎ¶¨Ìï®
     HPBarWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("HPBARWIDGET"));
     HPBarWidget->SetupAttachment(GetMesh());
     HPBarWidget->SetRelativeLocation(FVector(0.0F, 0.0F, 180.0F));
@@ -65,9 +66,9 @@ void AProject1Enemy::BeginPlay()
         EnemyHPWidget = CreateWidget<UEnemyHPWidget>(GetWorld(), EnemyHPBarWidgetClass);
         if (EnemyHPWidget)
         {
-            // ∫‰∆˜∆Æø° ¿ß¡¨¿ª √ﬂ∞°«’¥œ¥Ÿ.
+            // Î∑∞Ìè¨Ìä∏Ïóê ÏúÑÏ†ØÏùÑ Ï∂îÍ∞ÄÌï©ÎãàÎã§.
             EnemyHPWidget->AddToViewport();
-            // ProgressBar∏¶ √£æ∆º≠ º≥¡§«’¥œ¥Ÿ.
+            // ProgressBarÎ•º Ï∞æÏïÑÏÑú ÏÑ§Ï†ïÌï©ÎãàÎã§.
             HPProgressBar = Cast<UProgressBar>(EnemyHPWidget->GetWidgetFromName(TEXT("HPProgressBar")));
             HPProgressBar->SetPercent(1.0f);
             EnemyHPWidget->SetVisibility(ESlateVisibility::Hidden);
@@ -92,11 +93,11 @@ void AProject1Enemy::UpdateUIPosition()
 {
     if (EnemyHPWidget)
     {
-        // ¿˚¿« ¿ßƒ°∏¶ Ω∫≈©∏∞ ¡¬«•∑Œ ∫Ø»Ø
+        // Ï†ÅÏùò ÏúÑÏπòÎ•º Ïä§ÌÅ¨Î¶∞ Ï¢åÌëúÎ°ú Î≥ÄÌôò
         FVector2D ScreenPosition;
         UGameplayStatics::ProjectWorldToScreen(GetWorld()->GetFirstPlayerController(), GetActorLocation(), ScreenPosition);
 
-        // UI¿« ¿ßƒ°∏¶ ¿˚¿« Ω∫≈©∏∞ ¡¬«•∑Œ º≥¡§
+        // UIÏùò ÏúÑÏπòÎ•º Ï†ÅÏùò Ïä§ÌÅ¨Î¶∞ Ï¢åÌëúÎ°ú ÏÑ§Ï†ï
         int32 ViewportSizeX, ViewportSizeY;
 
         GetWorld()->GetFirstPlayerController()->GetViewportSize(ViewportSizeX, ViewportSizeY);
@@ -105,8 +106,8 @@ void AProject1Enemy::UpdateUIPosition()
         FVector2D WidgetOffset = FVector2D(0.0f, -50.0f);
         FVector2D FinalPosition = ScreenPosition + WidgetOffset;
 
-        // UI ¿ßƒ°∏¶ º≥¡§«’¥œ¥Ÿ.
-        FVector2D AnchorPoint = FVector2D(0.5f, 0.5f); // UI ¡ﬂæ” æﬁƒø
+        // UI ÏúÑÏπòÎ•º ÏÑ§Ï†ïÌï©ÎãàÎã§.
+        FVector2D AnchorPoint = FVector2D(0.5f, 0.5f); // UI Ï§ëÏïô ÏïµÏª§
         EnemyHPWidget->SetPositionInViewport(FinalPosition, true);
         EnemyHPWidget->SetAlignmentInViewport(AnchorPoint);
     }
@@ -117,52 +118,25 @@ void AProject1Enemy::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
-    // Check the distance to the player character
-    AProject1Character* PlayerCharacter = Cast<AProject1Character>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
-    if (PlayerCharacter)
+    // Check if player is within the enemy's sight
+    if (CanSeePlayer())
     {
-        float DistanceToPlayer = FVector::Distance(PlayerCharacter->GetActorLocation(), GetActorLocation());
-        if (IsZako && DistanceToPlayer < RecogDistance)
+        // Get player character
+        AProject1Character* PlayerCharacter = Cast<AProject1Character>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+        if (PlayerCharacter)
         {
-            // Draw the vision cone
-            DrawVisionCone();
-
+            // Player is within sight, chase the player
             FVector PlayerLocation = PlayerCharacter->GetActorLocation();
-            FVector EnemyLocation = GetActorLocation();
+            MoveToTarget(PlayerLocation);
 
-            // Calculate vector from enemy to player
-            FVector DirectionToPlayer = PlayerLocation - EnemyLocation;
+            // Rotate towards the player's direction
+            FRotator LookAtRotation = (PlayerLocation - GetActorLocation()).Rotation();
+            SetActorRotation(FRotator(0.0f, LookAtRotation.Yaw, 0.0f)); // Only rotate on Yaw axis
 
-            // Calculate angle between enemy forward vector and vector to player
-            float AngleToPlayer = FMath::Acos(FVector::DotProduct(FVector::RightVector, DirectionToPlayer.GetSafeNormal())); // RightVector∏¶ ªÁøÎ«œø© ∫Œ√§≤√¿ª øﬁ¬ ø°º≠ ª˝º∫
-            float AngleInDegrees = FMath::RadiansToDegrees(AngleToPlayer);
-
-            // Check if the player is within the cone of vision (e.g., 90 degrees)
-            if (AngleInDegrees <= 45.0f && DirectionToPlayer.Size() <= RecogDistance)
-            {
-                FRotator LookAtRotation = FRotationMatrix::MakeFromX(DirectionToPlayer).Rotator();
-                SetActorRotation(FRotator(0.0f, LookAtRotation.Yaw - 90.0f, 0.0f)); // ¡¬øÏ »∏¿¸∏∏ ∞Ì∑¡«œø© º≥¡§
-                if (AnimInstance)
-                {
-                    AnimInstance->IsMoving = true; // ¿Ãµø ¡ﬂ¿”¿ª º≥¡§
-                }
-                if (!IsScreaming)
-                {
-                    // Play the animation montage
-                    PlayScreamAnimation();
-                    IsScreaming = true;
-                }
-
-                MoveToTarget(PlayerLocation);
-            }
-        }
-        else if (!IsZako && DistanceToPlayer < RecogDistance)
-        {
-            FRotator LookAtRotation = FRotationMatrix::MakeFromX(PlayerCharacter->GetActorLocation() - GetActorLocation()).Rotator();
-            SetActorRotation(FRotator(0.0f, LookAtRotation.Yaw - 90.0f, 0.0f)); // ¡¬øÏ »∏¿¸∏∏ ∞Ì∑¡«œø© º≥¡§
+            // Update animation and other behaviors
             if (AnimInstance)
             {
-                AnimInstance->IsMoving = true; // ¿Ãµø ¡ﬂ¿”¿ª º≥¡§
+                AnimInstance->IsMoving = true; // Set moving state
             }
             if (!IsScreaming)
             {
@@ -170,18 +144,19 @@ void AProject1Enemy::Tick(float DeltaTime)
                 PlayScreamAnimation();
                 IsScreaming = true;
             }
-
-            MoveToTarget(PlayerCharacter->GetActorLocation());
-        }
-        else
-        {
-            if (AnimInstance)
-            {
-                AnimInstance->IsMoving = false; // ¿Ãµø ¡ﬂ¿”¿ª º≥¡§
-            }
-            IsScreaming = false; // Reset the flag if the player is out of range
         }
     }
+    else
+    {
+        // Player is out of sight, stop movement and reset screaming flag
+        if (AnimInstance)
+        {
+            AnimInstance->IsMoving = false; // Set not moving state
+        }
+        IsScreaming = false;
+    }
+
+    // Update UI position
     UpdateUIPosition();
 }
 
@@ -241,7 +216,7 @@ void AProject1Enemy::PlayScreamAnimation()
         // Play the animation montage
         PlayAnimMontage(ZombieScreamMontage, 1.f, NAME_None);
 
-        // ∑Œ±◊ √‚∑¬
+        // Î°úÍ∑∏ Ï∂úÎ†•
         UE_LOG(LogTemp, Warning, TEXT("Zombiescream animation is playing!"));
     }
 }
@@ -277,4 +252,50 @@ void AProject1Enemy::DrawVisionCone()
             }
         }
     }
+}
+
+bool AProject1Enemy::CanSeePlayer()
+{
+    if (GetWorld())
+    {
+        // Get the player character
+        AProject1Character* PlayerCharacter = Cast<AProject1Character>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+        if (PlayerCharacter)
+        {
+            // Calculate the direction from the enemy to the player
+            FVector DirectionToPlayer = PlayerCharacter->GetActorLocation() - GetActorLocation();
+
+            // Calculate the angle between enemy's forward vector and direction to player
+            float AngleToPlayer = FMath::Acos(FVector::DotProduct(GetActorForwardVector(), DirectionToPlayer.GetSafeNormal()));
+            float AngleInDegrees = FMath::RadiansToDegrees(AngleToPlayer);
+
+            // Check if the player is within the enemy's field of view and within recognition distance
+            if (AngleInDegrees <= FieldOfView && DirectionToPlayer.Size() <= RecogDistance)
+            {
+                // Perform a line trace to check if there are obstacles between enemy and player
+                FHitResult HitResult;
+                FCollisionQueryParams CollisionParams;
+                CollisionParams.AddIgnoredActor(this); // Ignore the enemy itself
+                CollisionParams.AddIgnoredActor(PlayerCharacter); // Ignore the player character
+                CollisionParams.bTraceComplex = true; // Trace against complex collision
+
+                // Perform the line trace
+                if (!GetWorld()->LineTraceSingleByChannel(HitResult, GetActorLocation(), PlayerCharacter->GetActorLocation(), ECC_Visibility, CollisionParams))
+                {
+                    // Line trace didn't hit any obstacles, player is within sight
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
+bool AProject1Enemy::IsPlayerInFront(const FVector& PlayerDirection) const
+{
+    // Calculate the dot product between enemy's forward vector and player's direction
+    float DotProduct = FVector::DotProduct(GetActorForwardVector(), PlayerDirection.GetSafeNormal());
+
+    // If the dot product is positive, player is in front of the enemy
+    return DotProduct > 0;
 }

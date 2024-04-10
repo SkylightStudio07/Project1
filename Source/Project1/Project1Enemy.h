@@ -29,6 +29,9 @@ public:
     UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Animation", Meta = (AllowPrivateAccess = true))
         UAnimMontage* ZombieScreamMontage;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy")
+        float FieldOfView;
+
     // Function to play scream animation
     void PlayScreamAnimation();
 
@@ -69,6 +72,10 @@ public:
     void DrawVisionCone();
 
     void UpdateUIPosition();
+
+    bool CanSeePlayer();
+
+    bool IsPlayerInFront(const FVector& PlayerDirection) const;
     
 
 private:
