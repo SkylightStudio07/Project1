@@ -44,6 +44,9 @@ public:
         class UEnemyHPWidget* EnemyHPWidget;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI")
+        class UWidgetComponent* EnemyRecognitionWidget;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI")
         TSubclassOf<UEnemyHPWidget> EnemyHPBarWidgetClass;
 
     UPROPERTY()
@@ -78,7 +81,7 @@ public:
     bool IsPlayerInFront(const FVector& PlayerDirection) const;
     
 
-private:
+public:
     // Target location for enemy movement
     FVector TargetLocation;
     FVector TargetMovementLocation;

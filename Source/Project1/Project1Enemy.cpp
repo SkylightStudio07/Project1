@@ -32,24 +32,6 @@ AProject1Enemy::AProject1Enemy()
     {
         UE_LOG(LogTemp, Error, TEXT("Failed to load ZombieScreamMontage!"));
     }
-
-    /* 이제 HPBar은 EnemyHPWidget.h에서 관리함
-    HPBarWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("HPBARWIDGET"));
-    HPBarWidget->SetupAttachment(GetMesh());
-    HPBarWidget->SetRelativeLocation(FVector(0.0F, 0.0F, 180.0F));
-    HPBarWidget->SetRelativeRotation(FQuat(FRotator(0.0f, 0.0f, 0.0f)));
-    HPBarWidget->SetWidgetSpace(EWidgetSpace::World);
-    static ConstructorHelpers::FClassFinder<UUserWidget> UI_HUD(TEXT("/Game/Blueprints/EnemyHPBar.EnemyHPBar_C"));
-    if (UI_HUD.Succeeded()) {
-        HPBarWidget->SetWidgetClass(UI_HUD.Class);
-        HPBarWidget->SetDrawSize(FVector2D(150.0F, 50.0F));
-    }
-    else {
-        UE_LOG(LogTemp, Error, TEXT("Failed to load HPBARWIDGET!"));
-    }
-    */
-
-
 }
 
 // Called when the game starts or when spawned

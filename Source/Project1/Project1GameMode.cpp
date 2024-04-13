@@ -10,4 +10,5 @@ AProject1GameMode::AProject1GameMode()
     {
         DefaultPawnClass = PlayerCharacterBPClass.Class;
     }
+    Alert = false;
 }

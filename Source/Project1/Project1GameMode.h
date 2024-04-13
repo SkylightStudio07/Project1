@@ -13,6 +13,15 @@ class AProject1GameMode : public AGameModeBase
 
 public:
 	AProject1GameMode();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay")
+		bool Alert;
+
+	UFUNCTION(BlueprintCallable)
+	void SetAlert(bool AlertSituation)
+	{
+		Alert = AlertSituation;
+	}
 };
 
 
