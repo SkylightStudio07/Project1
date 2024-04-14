@@ -36,6 +36,7 @@ public:
     void PlayScreamAnimation();
 
     bool IsScreaming;
+    bool IsChasing;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation", Meta = (AllowPrivateAccess = true))
     UEnemyAnimInstance* AnimInstance;

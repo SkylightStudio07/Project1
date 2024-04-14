@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿    // Fill out your copyright notice in the Description page of Project Settings.
 
 // Project1Enemy.cpp 파일
 
@@ -22,6 +22,7 @@ AProject1Enemy::AProject1Enemy()
     EnemyHP = 100.0f;
     MaxHP = EnemyHP;
     FieldOfView = 60.0f;
+    IsChasing = false;
 
     static ConstructorHelpers::FObjectFinder<UAnimMontage> ZombieScreamMontageAsset(TEXT("/Game/Enemies/ZombieScreamMontage.ZombieScreamMontage"));
     if (ZombieScreamMontageAsset.Succeeded())
@@ -39,7 +40,6 @@ void AProject1Enemy::BeginPlay()
 {
     Super::BeginPlay();
 
-    // Set initial target location for enemy movement
     TargetMovementLocation = GetActorLocation();
     AnimInstance = Cast<UEnemyAnimInstance>(GetMesh()->GetAnimInstance());
 
@@ -48,9 +48,8 @@ void AProject1Enemy::BeginPlay()
         EnemyHPWidget = CreateWidget<UEnemyHPWidget>(GetWorld(), EnemyHPBarWidgetClass);
         if (EnemyHPWidget)
         {
-            // 뷰포트에 위젯을 추가합니다.
+            // 뷰포트에 위젯 추가
             EnemyHPWidget->AddToViewport();
-            // ProgressBar를 찾아서 설정합니다.
             HPProgressBar = Cast<UProgressBar>(EnemyHPWidget->GetWidgetFromName(TEXT("HPProgressBar")));
             HPProgressBar->SetPercent(1.0f);
             EnemyHPWidget->SetVisibility(ESlateVisibility::Hidden);
@@ -103,6 +102,7 @@ void AProject1Enemy::Tick(float DeltaTime)
     // Check if player is within the enemy's sight
     if (CanSeePlayer())
     {
+        IsChasing = true;
         // Get player character
         AProject1Character* PlayerCharacter = Cast<AProject1Character>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
         if (PlayerCharacter)
@@ -130,11 +130,8 @@ void AProject1Enemy::Tick(float DeltaTime)
     }
     else
     {
-        // Player is out of sight, stop movement and reset screaming flag
-        if (AnimInstance)
-        {
-            AnimInstance->IsMoving = false; // Set not moving state
-        }
+        IsChasing = false;
+        if (AnimInstance) { AnimInstance->IsMoving = false; }
         IsScreaming = false;
     }
 
@@ -207,11 +204,10 @@ void AProject1Enemy::DrawVisionCone()
 {
     if (GetWorld())
     {
-        // Get the player character
         AProject1Character* PlayerCharacter = Cast<AProject1Character>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
         if (PlayerCharacter)
         {
-            // Calculate the vertices of the fan shape
+
             const int32 NumSegments = 36; // Number of segments to approximate the fan shape
             const float AngleIncrement = 360.0f / NumSegments;
             const FVector StartDirection = GetActorForwardVector();
@@ -240,21 +236,16 @@ bool AProject1Enemy::CanSeePlayer()
 {
     if (GetWorld())
     {
-        // Get the player character
         AProject1Character* PlayerCharacter = Cast<AProject1Character>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
         if (PlayerCharacter)
         {
-            // Calculate the direction from the enemy to the player
             FVector DirectionToPlayer = PlayerCharacter->GetActorLocation() - GetActorLocation();
 
-            // Calculate the angle between enemy's forward vector and direction to player
             float AngleToPlayer = FMath::Acos(FVector::DotProduct(GetActorForwardVector(), DirectionToPlayer.GetSafeNormal()));
             float AngleInDegrees = FMath::RadiansToDegrees(AngleToPlayer);
 
-            // Check if the player is within the enemy's field of view and within recognition distance
             if (AngleInDegrees <= FieldOfView && DirectionToPlayer.Size() <= RecogDistance)
             {
-                // Perform a line trace to check if there are obstacles between enemy and player
                 FHitResult HitResult;
                 FCollisionQueryParams CollisionParams;
                 CollisionParams.AddIgnoredActor(this); // Ignore the enemy itself
@@ -270,7 +261,9 @@ bool AProject1Enemy::CanSeePlayer()
             }
         }
     }
+
     return false;
+
 }
 
 bool AProject1Enemy::IsPlayerInFront(const FVector& PlayerDirection) const

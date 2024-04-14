@@ -5,7 +5,6 @@
 
 AWanderingEnemy::AWanderingEnemy()
 {
-    // Set default values
     UpdateInterval = 5.0f;
     WanderRadius = 500.0f;
 }
@@ -15,7 +14,6 @@ void AWanderingEnemy::BeginPlay()
 {
     Super::BeginPlay();
 
-    // Start timer to update target location
     GetWorldTimerManager().SetTimer(UpdateTimerHandle, this, &AWanderingEnemy::UpdateTargetLocation, UpdateInterval, true);
 }
 
@@ -24,8 +22,7 @@ void AWanderingEnemy::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
-    // Move towards the target location
-    MoveToTarget(TargetLocation);
+    if (!IsChasing) { MoveToTarget(TargetLocation); }
 }
 
 // Update target location for wandering
