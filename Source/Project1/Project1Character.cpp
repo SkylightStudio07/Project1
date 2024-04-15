@@ -105,10 +105,12 @@ void AProject1Character::SetupPlayerInputComponent(class UInputComponent* Player
     PlayerInputComponent->BindAction("SetFPS", IE_Pressed, this, &AProject1Character::SetControlModeFPS);
     PlayerInputComponent->BindAction("SetTopView", IE_Pressed, this, &AProject1Character::SetControlModeTopView);
 
-    // Á¶ÁØ
+    PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &AProject1Character::Crouching);
+    PlayerInputComponent->BindAction("CrouchEnd", IE_Pressed, this, &AProject1Character::CrouchingEnd);
+
     PlayerInputComponent->BindAction("Aim", IE_Pressed, this, &AProject1Character::OnRightMouseButtonPressed);
     PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AProject1Character::OnLeftMouseButtonPressed);
-    PlayerInputComponent->BindAction("Fire", IE_Released, this, &AProject1Character::OnLeftMouseButtonReleased);
+    PlayerInputComponent->BindAction("Fire_out", IE_Released, this, &AProject1Character::OnLeftMouseButtonReleased);
 }
 
 void AProject1Character::BeginPlay()
@@ -319,6 +321,16 @@ void AProject1Character::SetControlModeTopView()
             MyCharacter->SetControlMode(2); // 2 for Top View
         }
     }
+}
+
+void AProject1Character::Crouching()
+{
+
+}
+
+void AProject1Character::CrouchingEnd()
+{
+
 }
 
 void AProject1Character::OnRightMouseButtonPressed()

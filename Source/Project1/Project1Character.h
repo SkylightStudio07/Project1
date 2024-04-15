@@ -63,6 +63,8 @@ protected:
     void LookUpAtRate(float Rate);
     void MoveForward(float Value);
     void MoveRight(float Value);
+    void Crouching();
+    void CrouchingEnd();
 
     UFUNCTION(BlueprintCallable)
     void SetControlModeTPS();
