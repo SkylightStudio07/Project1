@@ -90,6 +90,9 @@ protected:
 
     class UProject1AnimInstance* PlayerAnimInstance;
 
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Pawn")
+        bool bIsCrouching;
+
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Fire")
         bool bIsFiring;
 

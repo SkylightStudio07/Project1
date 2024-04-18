@@ -81,6 +81,7 @@ AProject1Character::AProject1Character()
 
     Bullets = 60;
     CanFire = true;
+    bIsCrouching = false;
 }
 
 void AProject1Character::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
@@ -325,12 +326,12 @@ void AProject1Character::SetControlModeTopView()
 
 void AProject1Character::Crouching()
 {
-
+    bIsCrouching = true;
 }
 
 void AProject1Character::CrouchingEnd()
 {
-
+    bIsCrouching = false;
 }
 
 void AProject1Character::OnRightMouseButtonPressed()
