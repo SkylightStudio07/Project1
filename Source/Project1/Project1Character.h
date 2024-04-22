@@ -51,6 +51,13 @@ public:
 
     void ItemPickup();
 
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Pawn")
+        bool bIsCrouching;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Fire")
+        int32 AlertGuage;
+
+
 protected:
     virtual void BeginPlay() override;
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -75,6 +82,9 @@ protected:
     UFUNCTION(BlueprintCallable)
     void SetControlModeTopView();
 
+    UFUNCTION(BlueprintCallable)
+        void SetIsCrouching(bool isCrouchingSetter);
+
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
         class USpringArmComponent* CameraBoom;
 
@@ -90,9 +100,6 @@ protected:
 
     class UProject1AnimInstance* PlayerAnimInstance;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Pawn")
-        bool bIsCrouching;
-
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Fire")
         bool bIsFiring;
 
@@ -107,6 +114,6 @@ protected:
     UPROPERTY(EditDefaultsOnly, Category = "UI")
         TSubclassOf<UPlayerHUD> PlayerHUDClass;
 
-    // 생성된 PlayerHUD 인스턴스를 보관하기 위한 변수
+    // PlayerHUD 인스턴스 변수
     UPlayerHUD* PlayerHUDInstance;
 };

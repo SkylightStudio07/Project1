@@ -98,41 +98,79 @@ void AProject1Enemy::UpdateUIPosition()
 void AProject1Enemy::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
+    AProject1Character* PlayerCharacter = Cast<AProject1Character>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
 
-    // Check if player is within the enemy's sight
-    if (CanSeePlayer())
-    {
-        IsChasing = true;
-        // Get player character
-        AProject1Character* PlayerCharacter = Cast<AProject1Character>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
-        if (PlayerCharacter)
-        {
-            // Player is within sight, chase the player
-            FVector PlayerLocation = PlayerCharacter->GetActorLocation();
-            MoveToTarget(PlayerLocation);
+    if (PlayerCharacter) {
+        // 플레이어가 Crouching 중인지 체크
+        if (PlayerCharacter->bIsCrouching) {
 
-            // Rotate towards the player's direction
-            FRotator LookAtRotation = (PlayerLocation - GetActorLocation()).Rotation();
-            SetActorRotation(FRotator(0.0f, LookAtRotation.Yaw, 0.0f)); // Only rotate on Yaw axis
-
-            // Update animation and other behaviors
-            if (AnimInstance)
+            // 플레이어가 시야에 있는지 판정
+            if (CanSeePlayer())
             {
-                AnimInstance->IsMoving = true; // Set moving state
+                // 추격 시작
+                IsChasing = true;
+                FVector PlayerLocation = PlayerCharacter->GetActorLocation();
+                MoveToTarget(PlayerLocation);
+
+                // 플레이어 방향으로 회전
+                FRotator LookAtRotation = (PlayerLocation - GetActorLocation()).Rotation();
+                SetActorRotation(FRotator(0.0f, LookAtRotation.Yaw, 0.0f)); // Only rotate on Yaw axis
+
+                // 애니메이션 체크
+                if (AnimInstance)
+                {
+                    AnimInstance->IsMoving = true; // Set moving state
+                }
+                if (!IsScreaming)
+                {
+                    PlayScreamAnimation();
+                    IsScreaming = true;
+                }
             }
-            if (!IsScreaming)
+            else
             {
-                // Play the animation montage
-                PlayScreamAnimation();
-                IsScreaming = true;
+                IsChasing = false;
+                if (AnimInstance) { AnimInstance->IsMoving = false; }
+                IsScreaming = false;
             }
         }
-    }
-    else
-    {
-        IsChasing = false;
-        if (AnimInstance) { AnimInstance->IsMoving = false; }
-        IsScreaming = false;
+        else if (PlayerCharacter->bIsCrouching == false) {
+
+            // 플레이어 거리 판정
+            float DistanceToPlayer = FVector::Distance(PlayerCharacter->GetActorLocation(), GetActorLocation());
+
+            if (DistanceToPlayer < RecogDistance)
+            {
+                // Draw the vision cone
+                // DrawVisionCone();
+
+                FVector PlayerLocation = PlayerCharacter->GetActorLocation();
+                FVector EnemyLocation = GetActorLocation();
+
+                // Calculate vector from enemy to player
+                FVector DirectionToPlayer = PlayerLocation - EnemyLocation;
+
+                // Calculate angle between enemy forward vector and vector to player
+
+                if (DirectionToPlayer.Size() <= RecogDistance)
+                {
+                    FRotator LookAtRotation = FRotationMatrix::MakeFromX(DirectionToPlayer).Rotator();
+                    SetActorRotation(FRotator(0.0f, LookAtRotation.Yaw, 0.0f)); // 좌우 회전만 고려하여 설정
+                    if (AnimInstance)
+                    {
+                        AnimInstance->IsMoving = true; // 이동 중임을 설정
+                    }
+                    if (!IsScreaming)
+                    {
+                        // Play the animation montage
+                        PlayScreamAnimation();
+                        IsScreaming = true;
+                    }
+
+                    MoveToTarget(PlayerLocation);
+                }
+            }
+        }
     }
 
     // Update UI position

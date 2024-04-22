@@ -82,6 +82,7 @@ AProject1Character::AProject1Character()
     Bullets = 60;
     CanFire = true;
     bIsCrouching = false;
+    AlertGuage = 0;
 }
 
 void AProject1Character::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
@@ -107,7 +108,7 @@ void AProject1Character::SetupPlayerInputComponent(class UInputComponent* Player
     PlayerInputComponent->BindAction("SetTopView", IE_Pressed, this, &AProject1Character::SetControlModeTopView);
 
     PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &AProject1Character::Crouching);
-    PlayerInputComponent->BindAction("CrouchEnd", IE_Pressed, this, &AProject1Character::CrouchingEnd);
+    PlayerInputComponent->BindAction("CrouchEnd", IE_Released, this, &AProject1Character::CrouchingEnd);
 
     PlayerInputComponent->BindAction("Aim", IE_Pressed, this, &AProject1Character::OnRightMouseButtonPressed);
     PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AProject1Character::OnLeftMouseButtonPressed);
@@ -146,6 +147,7 @@ void AProject1Character::BeginPlay()
         if (PlayerHUDInstance)
         {
             PlayerHUDInstance->AddToViewport(); // 화면에 추가
+            PlayerHUDInstance->SetAlertProgressBar(0);
         }
     }
     else
@@ -327,11 +329,17 @@ void AProject1Character::SetControlModeTopView()
 void AProject1Character::Crouching()
 {
     bIsCrouching = true;
+    UE_LOG(LogTemp, Warning, TEXT("Crouching : bIsCrouching : %s"), bIsCrouching ? TEXT("true") : TEXT("false"));
 }
 
 void AProject1Character::CrouchingEnd()
 {
     bIsCrouching = false;
+    UE_LOG(LogTemp, Warning, TEXT("CrouchingEnd : bIsCrouching : %s"), bIsCrouching ? TEXT("true") : TEXT("false"));
+}
+
+void AProject1Character::SetIsCrouching(bool isCrouchingSetter) {
+    bIsCrouching = isCrouchingSetter;
 }
 
 void AProject1Character::OnRightMouseButtonPressed()

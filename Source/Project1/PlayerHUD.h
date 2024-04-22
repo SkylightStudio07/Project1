@@ -17,5 +17,8 @@ class PROJECT1_API UPlayerHUD : public UUserWidget
 public:
 	UFUNCTION(BlueprintCallable)
 		void SetAmmoText(int32 RemainingAmmo);
+	UFUNCTION(BlueprintCallable)
+		void SetAlertProgressBar(int32 ParaGuage);
 	
+	int32 Guage;
 };
