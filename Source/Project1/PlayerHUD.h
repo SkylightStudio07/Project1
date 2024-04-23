@@ -18,7 +18,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 		void SetAmmoText(int32 RemainingAmmo);
 	UFUNCTION(BlueprintCallable)
-		void SetAlertProgressBar(int32 ParaGuage);
+		void SetAlertProgressBar(float ParaGuage);
 	
 	int32 Guage;
 };

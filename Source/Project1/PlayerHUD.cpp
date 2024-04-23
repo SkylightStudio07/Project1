@@ -22,17 +22,12 @@ void UPlayerHUD::SetAmmoText(int32 RemainingAmmo)
     }
 }
 
-void UPlayerHUD::SetAlertProgressBar(int32 ParaGuage)
+void UPlayerHUD::SetAlertProgressBar(float ParaGuage)
 {
     UProgressBar* AlertProgressBar = Cast<UProgressBar>(GetWidgetFromName(TEXT("ALERTPROGRESSBAR")));
     
-
     if (AlertProgressBar)
     {
-        AlertProgressBar->SetPercent(ParaGuage / 100);
-    }
-    else
-    {
-        UE_LOG(LogTemp, Warning, TEXT("Failed to find AlertProgressBar Widget!"));
+        AlertProgressBar->SetPercent(ParaGuage);
     }
 }

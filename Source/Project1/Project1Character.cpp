@@ -82,7 +82,8 @@ AProject1Character::AProject1Character()
     Bullets = 60;
     CanFire = true;
     bIsCrouching = false;
-    AlertGuage = 0;
+    CurrentAlertGuage = 0;
+    MaxAlertGuage = 100.0f;
 }
 
 void AProject1Character::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
@@ -150,17 +151,21 @@ void AProject1Character::BeginPlay()
             PlayerHUDInstance->SetAlertProgressBar(0);
         }
     }
+
     else
     {
         UE_LOG(LogTemp, Error, TEXT("PlayerHUD class is not set!"));
     }
 }
 
+void AProject1Character::Tick(float DeltaTime) {
+    Super::Tick(DeltaTime);
+}
+
 void AProject1Character::Fire()
 {
     ReloadManager();
     if (CanFire && Bullets > 0) {
-
         if (ProjectileClass != nullptr)
         {
             // 총구 위치와 방향을 가져옵니다.
@@ -181,7 +186,7 @@ void AProject1Character::Fire()
 
             if (Projectile)
             {
-                // 총알을 발사합니다.
+                // 총알 투사체 발사
                 Projectile->FireInDirection(MuzzleDirection);
 
                 // 총알 발사 시 애니메이션 상태 변경
@@ -189,6 +194,9 @@ void AProject1Character::Fire()
                 {
                     PlayerAnimInstance->SetIsFiring(bIsFiring);
                 }
+
+                SetAlertGuage(1.5f);
+
             }
             else
             {
@@ -201,6 +209,16 @@ void AProject1Character::Fire()
             bIsFiring = false;
         }
     }
+}
+
+void AProject1Character::SetAlertGuage(float GuageAmount) {
+    CurrentAlertGuage += GuageAmount;
+
+    UE_LOG(LogTemp, Error, TEXT("CurrentAlertGuage : %f"), CurrentAlertGuage);
+
+    float currentAlertGuage = FMath::Clamp(CurrentAlertGuage, 0.0f, MaxAlertGuage);
+    float Percentage = currentAlertGuage / MaxAlertGuage;
+    PlayerHUDInstance->SetAlertProgressBar(Percentage);
 }
 
 void AProject1Character::TouchStarted(ETouchIndex::Type FingerIndex, FVector Location)

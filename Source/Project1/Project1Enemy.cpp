@@ -23,6 +23,7 @@ AProject1Enemy::AProject1Enemy()
     MaxHP = EnemyHP;
     FieldOfView = 60.0f;
     IsChasing = false;
+    isRecognizingPlayer = false;
 
     static ConstructorHelpers::FObjectFinder<UAnimMontage> ZombieScreamMontageAsset(TEXT("/Game/Enemies/ZombieScreamMontage.ZombieScreamMontage"));
     if (ZombieScreamMontageAsset.Succeeded())
@@ -87,7 +88,7 @@ void AProject1Enemy::UpdateUIPosition()
         FVector2D WidgetOffset = FVector2D(0.0f, -50.0f);
         FVector2D FinalPosition = ScreenPosition + WidgetOffset;
 
-        // UI 위치를 설정합니다.
+        // UI 위치를 설정
         FVector2D AnchorPoint = FVector2D(0.5f, 0.5f); // UI 중앙 앵커
         EnemyHPWidget->SetPositionInViewport(FinalPosition, true);
         EnemyHPWidget->SetAlignmentInViewport(AnchorPoint);
@@ -99,6 +100,7 @@ void AProject1Enemy::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
     AProject1Character* PlayerCharacter = Cast<AProject1Character>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+    APlayerController* PlayerController = Cast<APlayerController>(PlayerCharacter->GetController());
 
     if (PlayerCharacter) {
         // 플레이어가 Crouching 중인지 체크
@@ -147,10 +149,7 @@ void AProject1Enemy::Tick(float DeltaTime)
                 FVector PlayerLocation = PlayerCharacter->GetActorLocation();
                 FVector EnemyLocation = GetActorLocation();
 
-                // Calculate vector from enemy to player
                 FVector DirectionToPlayer = PlayerLocation - EnemyLocation;
-
-                // Calculate angle between enemy forward vector and vector to player
 
                 if (DirectionToPlayer.Size() <= RecogDistance)
                 {
@@ -160,11 +159,19 @@ void AProject1Enemy::Tick(float DeltaTime)
                     {
                         AnimInstance->IsMoving = true; // 이동 중임을 설정
                     }
-                    if (!IsScreaming)
+
+                    if (!IsScreaming) 
                     {
                         // Play the animation montage
                         PlayScreamAnimation();
                         IsScreaming = true;
+                    }
+
+                    if (PlayerController && !isRecognizingPlayer)
+                    {
+                        isRecognizingPlayer = true;
+                        UE_LOG(LogTemp, Error, TEXT("플레이어 추적 시작"));
+                        PlayerCharacter->SetAlertGuage(2.0f);
                     }
 
                     MoveToTarget(PlayerLocation);

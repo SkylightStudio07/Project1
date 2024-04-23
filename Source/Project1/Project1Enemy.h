@@ -32,6 +32,10 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy")
         float FieldOfView;
 
+    // ScreamMontage, 게이지바 체크에 사용
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy")
+        bool isRecognizingPlayer;
+
     // Function to play scream animation
     void PlayScreamAnimation();
 
