@@ -54,17 +54,9 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Pawn")
         bool bIsCrouching;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Fire")
-        float CurrentAlertGuage;
-
     float MaxAlertGuage;
 
     virtual void Tick(float DeltaTime) override;
-
-    // PlayerHUD 인스턴스 변수
-    UPlayerHUD* PlayerHUDInstance;
-
-    void SetAlertGuage(float GuageAmount);
 
 
 protected:
@@ -119,9 +111,4 @@ protected:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Fire")
         class UAnimInstance* RifleAnimInstance;
 
-    // PlayerHUD 멤버 변수 추가
-    UPROPERTY(EditDefaultsOnly, Category = "UI")
-        TSubclassOf<UPlayerHUD> PlayerHUDClass;
-
-    //UPlayerHUD GetPlayerHUDInstance();
 };

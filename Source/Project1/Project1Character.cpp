@@ -11,6 +11,7 @@
 #include "GunAnimInstance.h"
 #include "Project1Projectile.h"
 #include "PlayerHUD.h"
+#include "Project1GameMode.h"
 #include "Engine/SkeletalMesh.h"
 #include "GameFramework/SpringArmComponent.h"
 
@@ -61,11 +62,9 @@ AProject1Character::AProject1Character()
         UE_LOG(LogTemp, Error, TEXT("Can't Found Weapon!"));
     }
 
-    // 무기를 캐릭터 메시에 부착합니다.
+    // 무기  부착
     FName WeaponSocket(TEXT("thumb_01_r"));
     Weapon->SetupAttachment(GetMesh(), WeaponSocket);
-
-    // 무기를 특정 각도로 회전시킵니다.
 
     static ConstructorHelpers::FClassFinder<UAnimInstance> AnimBP_ClassFinder(TEXT("/Game/MilitaryWeapSilver/Weapons/RifleAnimBlueprint.RifleAnimBlueprint_C"));
     if (AnimBP_ClassFinder.Succeeded())
@@ -82,8 +81,7 @@ AProject1Character::AProject1Character()
     Bullets = 60;
     CanFire = true;
     bIsCrouching = false;
-    CurrentAlertGuage = 0;
-    MaxAlertGuage = 100.0f;
+
 }
 
 void AProject1Character::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
@@ -140,22 +138,6 @@ void AProject1Character::BeginPlay()
     {
         UE_LOG(LogTemp, Error, TEXT("Failed to initialize GunAnimInstance!"));
     }
-
-    if (PlayerHUDClass)
-    {
-        PlayerHUDInstance = CreateWidget<UPlayerHUD>(GetWorld(), PlayerHUDClass);
-
-        if (PlayerHUDInstance)
-        {
-            PlayerHUDInstance->AddToViewport(); // 화면에 추가
-            PlayerHUDInstance->SetAlertProgressBar(0);
-        }
-    }
-
-    else
-    {
-        UE_LOG(LogTemp, Error, TEXT("PlayerHUD class is not set!"));
-    }
 }
 
 void AProject1Character::Tick(float DeltaTime) {
@@ -195,7 +177,13 @@ void AProject1Character::Fire()
                     PlayerAnimInstance->SetIsFiring(bIsFiring);
                 }
 
-                SetAlertGuage(1.5f);
+                AProject1GameMode* GameMode = Cast<AProject1GameMode>(GetWorld()->GetAuthGameMode());
+
+                // 2. 얻은 참조를 통해 GameMode의 함수를 호출하여 WorldStatus를 설정합니다.
+                if (GameMode)
+                {
+                    GameMode->SetAlertGuage(1.5f); // 예시로 Alert로 설정
+                }
 
             }
             else
@@ -211,15 +199,6 @@ void AProject1Character::Fire()
     }
 }
 
-void AProject1Character::SetAlertGuage(float GuageAmount) {
-    CurrentAlertGuage += GuageAmount;
-
-    UE_LOG(LogTemp, Error, TEXT("CurrentAlertGuage : %f"), CurrentAlertGuage);
-
-    float currentAlertGuage = FMath::Clamp(CurrentAlertGuage, 0.0f, MaxAlertGuage);
-    float Percentage = currentAlertGuage / MaxAlertGuage;
-    PlayerHUDInstance->SetAlertProgressBar(Percentage);
-}
 
 void AProject1Character::TouchStarted(ETouchIndex::Type FingerIndex, FVector Location)
 {
@@ -430,9 +409,14 @@ void AProject1Character::StopFiring()
 
 void AProject1Character::UpdateAmmoText(int32 RemainingAmmo)
 {
-    if (PlayerHUDInstance)
+    AProject1GameMode* Project1GameMode = GetWorld()->GetAuthGameMode<AProject1GameMode>();
+    if (Project1GameMode)
     {
-        PlayerHUDInstance->SetAmmoText(RemainingAmmo);
+        UPlayerHUD* PlayerHUDInstance = Project1GameMode->PlayerHUDInstance;
+        if (PlayerHUDInstance)
+        {
+            PlayerHUDInstance->SetAmmoText(RemainingAmmo);
+        }
     }
 }
 

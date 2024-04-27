@@ -14,8 +14,12 @@ public:
     // Sets default values for this character's properties
     AProject1Enemy();
 
+    /*
+
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy")
         float RecogDistance;
+
+    */
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy")
         float EnemyMoveSpeed;
@@ -77,13 +81,19 @@ public:
     // Function to handle enemy taking damage
     virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
+    /*
     void DrawVisionCone();
+    */
 
     void UpdateUIPosition();
 
     bool CanSeePlayer();
 
     bool IsPlayerInFront(const FVector& PlayerDirection) const;
+
+    void PlayerChase_PlayerCrouch();
+
+    void PlayerChase_PlayerNOTCrouch(float RecogDistance);
     
 
 public:

@@ -24,10 +24,42 @@ void UPlayerHUD::SetAmmoText(int32 RemainingAmmo)
 
 void UPlayerHUD::SetAlertProgressBar(float ParaGuage)
 {
+    
     UProgressBar* AlertProgressBar = Cast<UProgressBar>(GetWidgetFromName(TEXT("ALERTPROGRESSBAR")));
     
     if (AlertProgressBar)
     {
         AlertProgressBar->SetPercent(ParaGuage);
     }
+    
+}
+
+void UPlayerHUD::SetAlertProgressBarColorWithAlertLevel(int32 Status) {
+    
+    // 색을 통합적으로 관리
+    FLinearColor ProgressBarColor;
+    switch (Status)
+    {
+    case 0:
+        ProgressBarColor = FLinearColor::Blue; // 청색
+        break;
+    case 1:
+        ProgressBarColor = FLinearColor(1.0f, 1.0f, 0.0f); // 경고 상황 : BLUE
+        break;
+    case 2:
+        ProgressBarColor = FLinearColor::Red; // 위험 상황 : RED
+        break;
+    default:
+        ProgressBarColor = FLinearColor::Blue; // Default
+        break;
+    }
+
+    UProgressBar* AlertProgressBar = Cast<UProgressBar>(GetWidgetFromName(TEXT("ALERTPROGRESSBAR")));
+
+    if (AlertProgressBar)
+    {
+        // HUD의 ProgressBar에 색상을 설정합니다.
+        AlertProgressBar->SetFillColorAndOpacity(ProgressBarColor);
+    }
+    
 }

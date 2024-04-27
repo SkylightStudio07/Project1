@@ -1,6 +1,5 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "BulletPickup.h"
 #include "Components/SphereComponent.h"
 #include "Project1Character.h"
@@ -41,7 +40,7 @@ void ABulletPickup::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AAc
 {
     if (OtherActor && (OtherActor != this) && OtherComp)
     {
-        // Check if the overlapping actor is a character
+        // 플레이어인지 판정
         AProject1Character* Character = Cast<AProject1Character>(OtherActor);
         if (Character)
         {

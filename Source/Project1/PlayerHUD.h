@@ -19,6 +19,8 @@ public:
 		void SetAmmoText(int32 RemainingAmmo);
 	UFUNCTION(BlueprintCallable)
 		void SetAlertProgressBar(float ParaGuage);
+	UFUNCTION(BlueprintCallable)
+		void SetAlertProgressBarColorWithAlertLevel(int32 Status);
 	
 	int32 Guage;
 };
