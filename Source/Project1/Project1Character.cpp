@@ -160,6 +160,7 @@ void AProject1Character::Fire()
             // 총알을 생성하고 발사합니다.
             Bullets--;
             UpdateAmmoText(Bullets);
+
             FActorSpawnParameters SpawnParams;
             SpawnParams.Owner = this;
             SpawnParams.Instigator = GetInstigator();

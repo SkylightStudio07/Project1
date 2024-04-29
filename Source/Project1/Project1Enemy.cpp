@@ -119,8 +119,46 @@ void AProject1Enemy::Tick(float DeltaTime)
         else if (!PlayerCharacter->bIsCrouching) { PlayerChase_PlayerNOTCrouch(400.0f); }
     }
 
-    // 위험 상황 : 조건(거리)만 충족되면 플레이어 추적
-    else if(currentWorldStatus == WorldStatus::Warning) { PlayerChase_PlayerNOTCrouch(1000.0f); } 
+    // 위험 상황 : 좀비들이 거리를 무시하고 플레이어를 추격.
+    else if(currentWorldStatus == WorldStatus::Warning) { 
+        if (PlayerCharacter) {
+            float DistanceToPlayer = FVector::Distance(PlayerCharacter->GetActorLocation(), GetActorLocation());
+            // Draw the vision cone
+            // DrawVisionCone();
+
+            FVector PlayerLocation = PlayerCharacter->GetActorLocation();
+            FVector EnemyLocation = GetActorLocation();
+
+            FVector DirectionToPlayer = PlayerLocation - EnemyLocation;
+
+            FRotator LookAtRotation = FRotationMatrix::MakeFromX(DirectionToPlayer).Rotator();
+            SetActorRotation(FRotator(0.0f, LookAtRotation.Yaw, 0.0f)); // 좌우 회전만 고려하여 설정
+
+
+            if (AnimInstance)
+            {
+                AnimInstance->IsMoving = true; // 이동 중임을 설정
+            }
+
+            if (!IsScreaming)
+            {
+                // Play the animation montage
+                PlayScreamAnimation();
+                IsScreaming = true;
+            }
+
+            if (!isRecognizingPlayer)
+            {
+                Project1GameMode->SetAlertGuage(2.0f);
+                isRecognizingPlayer = true;
+                UE_LOG(LogTemp, Error, TEXT("플레이어 추적 개시"));
+            }
+
+            MoveToTarget(PlayerLocation);
+        }
+                
+        
+    } 
 
     // 구 Tick() 플레이어 추적 레거시 코드
     /*
@@ -213,6 +251,8 @@ void AProject1Enemy::Tick(float DeltaTime)
     UpdateUIPosition();
 }
 
+// 플레이어가 시야에 보일 때
+
 void AProject1Enemy::PlayerChase_PlayerCrouch() {
 
     AProject1Character* PlayerCharacter = Cast<AProject1Character>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
@@ -244,6 +284,12 @@ void AProject1Enemy::PlayerChase_PlayerCrouch() {
                 {
                     PlayScreamAnimation();
                     IsScreaming = true;
+                }
+                if (!isRecognizingPlayer)
+                {
+                    Project1GameMode->SetAlertGuage(2.0f);
+                    isRecognizingPlayer = true;
+                    UE_LOG(LogTemp, Error, TEXT("플레이어 추적 개시 : PlayerChase_PlayerCrouch()"));
                 }
             }
             else
@@ -294,13 +340,11 @@ void AProject1Enemy::PlayerChase_PlayerNOTCrouch(float RecogDistance)
                         IsScreaming = true;
                     }
 
-                    if (PlayerController && !isRecognizingPlayer)
+                    if (!isRecognizingPlayer)
                     {
+                        Project1GameMode->SetAlertGuage(2.0f);
                         isRecognizingPlayer = true;
                         UE_LOG(LogTemp, Error, TEXT("플레이어 추적 개시"));
-
-
-                        Project1GameMode->SetAlertGuage(2.0f);
                     }
 
                     MoveToTarget(PlayerLocation);

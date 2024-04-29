@@ -24,12 +24,9 @@ void UEnemyAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 {
     if (!OwningEnemy) return;
 
-    // Update animation parameters based on the owning enemy's properties
-    // For example, you can access EnemyMoveSpeed from OwningEnemy and update animations accordingly
     if (OwningEnemy->EnemyMoveSpeed == 50.0f)
     {
-        // Play the zombiescream animation
-        // Assuming you have a function to play animations in your enemy class
+
         OwningEnemy->PlayScreamAnimation();
     }
 }
