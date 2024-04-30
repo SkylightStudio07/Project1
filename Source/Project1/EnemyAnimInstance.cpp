@@ -6,7 +6,7 @@
 
 UEnemyAnimInstance::UEnemyAnimInstance()
 {
-    // Default constructor
+    IsAlert = false;
 }
 
 void UEnemyAnimInstance::NativeInitializeAnimation()
@@ -29,4 +29,18 @@ void UEnemyAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 
         OwningEnemy->PlayScreamAnimation();
     }
+}
+
+void UEnemyAnimInstance::GetCurrentWorldStatus_Idle() {
+
+    AProject1GameMode* GameMode = Cast<AProject1GameMode>(GetWorld()->GetAuthGameMode());
+
+    if (GameMode->GetCurrentWorldStatus() == WorldStatus::Safe)
+    {
+        IsAlert = false;
+    }
+    else {
+        IsAlert = true;
+    }   
+    
 }

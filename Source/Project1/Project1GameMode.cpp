@@ -79,3 +79,8 @@ void AProject1GameMode::SetAlertGuage(float GuageAmount) {
     }
     
 }
+
+WorldStatus AProject1GameMode::GetCurrentWorldStatus() const
+{
+    return CurrentWorldStatus;
+}

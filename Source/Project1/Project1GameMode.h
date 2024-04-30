@@ -27,7 +27,6 @@ public:
 
 	AProject1GameMode();
 
-
     // 게임모드 Alert Sitiuation
     // 0 : Caution
     // 1 : Alert
@@ -38,6 +37,9 @@ public:
 
     UFUNCTION(BlueprintCallable)
         void SetCurrentWorldStatus(WorldStatus AlertLevel);
+
+    UFUNCTION(BlueprintCallable, Category = "WorldStatus")
+        WorldStatus GetCurrentWorldStatus() const;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Gameplay")
         float CurrentAlertGuage;

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
+#include "Project1GameMode.h"
 #include "EnemyAnimInstance.generated.h"
 
 UCLASS()
@@ -24,6 +25,12 @@ public:
     UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Animation")
         bool IsMoving;
 
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Animation")
+        bool IsAlert;
+
+    UFUNCTION(BlueprintCallable, Category = "Animation")
+        void GetCurrentWorldStatus_Idle();
+
 protected:
     // Reference to the owning pawn
     UPROPERTY(BlueprintReadOnly, Category = "Enemy")
@@ -32,6 +39,7 @@ protected:
     // Reference to the owning character
     UPROPERTY(BlueprintReadOnly, Category = "Enemy")
         class AProject1Enemy* OwningEnemy;
+
 
 
 };
