@@ -15,12 +15,22 @@ class PROJECT1_API UPlayerHUD : public UUserWidget
 	GENERATED_BODY()
 
 public:
+
+	// 총알 잔량 텍스트
+
 	UFUNCTION(BlueprintCallable)
 		void SetAmmoText(int32 RemainingAmmo);
+
+	// 이 섹션은 Alert ProgressBar을 관장
+
 	UFUNCTION(BlueprintCallable)
 		void SetAlertProgressBar(float ParaGuage);
 	UFUNCTION(BlueprintCallable)
 		void SetAlertProgressBarColorWithAlertLevel(int32 Status);
+
+	// 이 섹션은 Recognition ProgressBar을 관장
+
+	UFUNCTION(BlueprintCallable)
+		void SetRecogProgressBar(float ParaGuage);
 	
-	int32 Guage;
 };

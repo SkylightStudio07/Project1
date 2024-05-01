@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "Components/SphereComponent.h"
 #include "EnemyAnimInstance.h"
 #include "Project1Enemy.generated.h"
 
@@ -62,6 +63,24 @@ public:
         class UProgressBar* HPProgressBar;
 
     float MaxHP;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Recognition")
+        class USphereComponent* RecognitionVolume;
+
+    // Radius for the recognition volume
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Recognition")
+        float RecognitionRadius;
+
+    void IncreaseRecognitionGauge();
+
+    void OnPlayerEnterRecognitionVolume(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+        UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
+        const FHitResult& SweepResult);
+
+    // Function to change world status to Caution when recognition gauge is full
+    // void CheckWorldStatus();
+
+
 
 protected:
     // Called when the game starts or when spawned

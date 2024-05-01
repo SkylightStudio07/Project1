@@ -41,12 +41,23 @@ public:
     UFUNCTION(BlueprintCallable, Category = "WorldStatus")
         WorldStatus GetCurrentWorldStatus() const;
 
+    // 여기까지 World Status 섹션
+
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Gameplay")
         float CurrentAlertGuage;
 
     void SetAlertGuage(float GuageAmount);
 
     float MaxAlertGuage;
+
+    // 여기까지 Alert Guage 섹션
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Gameplay")
+        float CurrentRecogGuage;
+
+    void SetRecogGuage(float GuageAmount);
+
+    float MaxRecogGuage;
 
     UPROPERTY(EditDefaultsOnly, Category = "UI")
     UPlayerHUD* PlayerHUDInstance;

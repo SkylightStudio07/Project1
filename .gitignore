@@ -76,3 +76,4 @@ DerivedDataCache/*
 # Exclude specific large directories from being committed
 /Content/SoulCity/
 /Content/PhotoR_Backgrounds/
+/Content/ModularBuildingSet/

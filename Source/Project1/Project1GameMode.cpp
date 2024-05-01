@@ -13,7 +13,9 @@ AProject1GameMode::AProject1GameMode()
 
     CurrentWorldStatus = WorldStatus::Safe;
     CurrentAlertGuage = 0;
+    CurrentRecogGuage = 0;
     MaxAlertGuage = 100.0f;
+    MaxRecogGuage = 10000.0f;
     /*
     if (PlayerHUDClass)
     {
@@ -21,7 +23,7 @@ AProject1GameMode::AProject1GameMode()
 
         if (PlayerHUDInstance)
         {
-            PlayerHUDInstance->AddToViewport(); // È­¸é¿¡ Ãß°¡
+            PlayerHUDInstance->AddToViewport(); // È­ï¿½é¿¡ ï¿½ß°ï¿½
             PlayerHUDInstance->SetAlertProgressBar(0);
         }
     }
@@ -36,15 +38,16 @@ void AProject1GameMode::BeginPlay()
 {
     Super::BeginPlay();
 
-    // BeginPlay¿¡¼­ HUD »ý¼º ¹× ¼³Á¤
+    // BeginPlayï¿½ï¿½ï¿½ï¿½ HUD ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     if (PlayerHUDClass)
     {
         PlayerHUDInstance = CreateWidget<UPlayerHUD>(GetWorld(), PlayerHUDClass);
 
         if (PlayerHUDInstance)
         {
-            PlayerHUDInstance->AddToViewport(); // È­¸é¿¡ Ãß°¡
+            PlayerHUDInstance->AddToViewport(); // È­ï¿½é¿¡ ï¿½ß°ï¿½
             PlayerHUDInstance->SetAlertProgressBar(0);
+            PlayerHUDInstance->SetRecogProgressBar(0);
         }
     }
     else
@@ -56,6 +59,7 @@ void AProject1GameMode::BeginPlay()
 void AProject1GameMode::SetCurrentWorldStatus(WorldStatus AlertLevel) {
     CurrentWorldStatus = AlertLevel;
 }
+
 void AProject1GameMode::SetAlertGuage(float GuageAmount) {
     CurrentAlertGuage += GuageAmount;
 
@@ -77,7 +81,21 @@ void AProject1GameMode::SetAlertGuage(float GuageAmount) {
         CurrentWorldStatus = WorldStatus::Warning;
         PlayerHUDInstance->SetAlertProgressBarColorWithAlertLevel(2);
     }
-    
+}
+
+void AProject1GameMode::SetRecogGuage(float GuageAmount) {
+    CurrentRecogGuage += GuageAmount;
+
+    UE_LOG(LogTemp, Error, TEXT("CurrentRecogGuage : %f"), CurrentRecogGuage);
+
+    float currentRecogGuage = FMath::Clamp(CurrentRecogGuage, 0.0f, MaxRecogGuage);
+    float Percentage = currentRecogGuage / MaxRecogGuage;
+    PlayerHUDInstance->SetRecogProgressBar(Percentage);
+
+    if (Percentage >= 1 && CurrentWorldStatus == WorldStatus::Safe) {
+        CurrentWorldStatus = WorldStatus::Caution;
+        UE_LOG(LogTemp, Error, TEXT("Recognition ProgrerssBar is Full. Transited to Caution Status."));
+    }
 }
 
 WorldStatus AProject1GameMode::GetCurrentWorldStatus() const
