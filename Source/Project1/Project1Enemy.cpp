@@ -7,6 +7,7 @@
 #include "EnemyAnimInstance.h"
 #include "Kismet/GameplayStatics.h"
 #include "DrawDebugHelpers.h"
+#include "TimerManager.h"
 #include "Components/WidgetComponent.h"
 #include "EnemyHPWidget.h"
 #include "Project1GameMode.h"
@@ -39,6 +40,8 @@ AProject1Enemy::AProject1Enemy()
         RecognitionVolume->SetupAttachment(RootComponent);
         RecognitionVolume->OnComponentBeginOverlap.AddDynamic(this, &AProject1Enemy::OnPlayerEnterRecognitionVolume);
     }
+
+    bIsGaugeIncreaseTimerActive = false;
 }
 
 // Called when the game starts or when spawned
@@ -113,10 +116,24 @@ void AProject1Enemy::Tick(float DeltaTime)
     WorldStatus currentWorldStatus = Project1GameMode->CurrentWorldStatus;
 
     if (PlayerCharacter) {
-
+        
         // 안전 상황일 때는 눈에 보여야 추적
         if (currentWorldStatus == WorldStatus::Safe) {
             PlayerChase_PlayerCrouch();
+
+            float DistanceToPlayer = FVector::Dist(GetActorLocation(), PlayerCharacter->GetActorLocation());
+
+            // 인식 범위 안에 있는지 확인
+            if (DistanceToPlayer <= RecognitionRadius)
+            {
+                // UE_LOG(LogTemp, Error, TEXT("Caution 변화 준비중"));
+                // IncreaseRecognitionGauge();
+            }
+            else
+            {
+                // 인식 범위 밖에 있을 때의 처리
+            }
+
         }
 
         // 경고 상황일 때는 눈에 보이거나, 가까이 접근하면 추적
@@ -124,15 +141,13 @@ void AProject1Enemy::Tick(float DeltaTime)
             if (PlayerCharacter->bIsCrouching) {
                 PlayerChase_PlayerCrouch();
             }
-            else if (!PlayerCharacter->bIsCrouching) { PlayerChase_PlayerNOTCrouch(400.0f); }
+            else if (!PlayerCharacter->bIsCrouching) { PlayerChase_PlayerNOTCrouch(500.0f); }
         }
 
         // 위험 상황 : 좀비들이 거리를 무시하고 플레이어를 추격.
         else if (currentWorldStatus == WorldStatus::Warning) {
             if (PlayerCharacter) {
                 float DistanceToPlayer = FVector::Distance(PlayerCharacter->GetActorLocation(), GetActorLocation());
-                // Draw the vision cone
-                // DrawVisionCone();
 
                 FVector PlayerLocation = PlayerCharacter->GetActorLocation();
                 FVector EnemyLocation = GetActorLocation();
@@ -169,12 +184,6 @@ void AProject1Enemy::Tick(float DeltaTime)
         }
 
         float DistanceToPlayer = FVector::Distance(PlayerCharacter->GetActorLocation(), GetActorLocation());
-
-        // Increase recognition gauge based on distance to player
-        IncreaseRecognitionGauge();
-
-        // Check if world status should be changed to Caution
-        // CheckWorldStatus();
     }
 
     // 구 Tick() 플레이어 추적 레거시 코드
@@ -457,15 +466,62 @@ void AProject1Enemy::DrawVisionCone()
     }
 }
 
-*/
+
 
 void AProject1Enemy::OnPlayerEnterRecognitionVolume(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
     UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
     const FHitResult& SweepResult)
 {
-    AProject1Character* PlayerCharacter = Cast<AProject1Character>(OtherActor);
-    if (PlayerCharacter) { IncreaseRecognitionGauge(); 
-    UE_LOG(LogTemp, Error, TEXT("Caution 변화 준비중"));
+    UE_LOG(LogTemp, Warning, TEXT("Recognition volume overlap event triggered."));
+    
+        AProject1Character* Character = Cast<AProject1Character>(OtherActor);        
+        if (Character) {
+            UE_LOG(LogTemp, Error, TEXT("Caution 변화 준비중"));
+            IncreaseRecognitionGauge();
+        }
+    
+}
+*/
+
+void AProject1Enemy::OnPlayerEnterRecognitionVolume(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+    UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+    AProject1Character* Character = Cast<AProject1Character>(OtherActor);
+    if (Character)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Player Entered Recognition Volume"));
+        StartRecognitionGaugeIncrease();
+    }
+}
+
+void AProject1Enemy::OnPlayerExitRecognitionVolume(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+    UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+    AProject1Character* Character = Cast<AProject1Character>(OtherActor);
+    if (Character)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Stopped Timer"));
+        GetWorldTimerManager().ClearTimer(GaugeIncreaseTimerHandle);
+        StopRecognitionGaugeIncrease();
+    }
+}
+
+void AProject1Enemy::StartRecognitionGaugeIncrease()
+{
+    if (!bIsGaugeIncreaseTimerActive)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Timer Begin"));
+        GetWorldTimerManager().SetTimer(GaugeIncreaseTimerHandle, this, &AProject1Enemy::IncreaseRecognitionGauge, 1.0f, true);
+        bIsGaugeIncreaseTimerActive = true;
+    }
+}
+
+void AProject1Enemy::StopRecognitionGaugeIncrease()
+{
+    if (bIsGaugeIncreaseTimerActive)
+    {
+        GetWorldTimerManager().ClearTimer(GaugeIncreaseTimerHandle);
+        bIsGaugeIncreaseTimerActive = false;
     }
 }
 
@@ -473,7 +529,8 @@ void AProject1Enemy::IncreaseRecognitionGauge()
 {
     AProject1GameMode* GameMode = Cast<AProject1GameMode>(GetWorld()->GetAuthGameMode());
     if (GameMode) { 
-        GameMode->SetRecogGuage(2f); 
+        UE_LOG(LogTemp, Error, TEXT("함수 표지"));
+        GameMode->SetRecogGuage(2.0f); 
     }
 }
 
@@ -524,9 +581,7 @@ bool AProject1Enemy::CanSeePlayer()
             }
         }
     }
-
     return false;
-
 }
 
 bool AProject1Enemy::IsPlayerInFront(const FVector& PlayerDirection) const

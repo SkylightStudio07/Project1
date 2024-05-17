@@ -24,17 +24,13 @@ public:
     virtual void Tick(float DeltaTime) override;
 
 private:
-    // Interval between updating target location
     UPROPERTY(EditAnywhere, Category = "Wandering")
         float UpdateInterval = 5.0f;
 
-    // Radius of the wandering area
     UPROPERTY(EditAnywhere, Category = "Wandering")
         float WanderRadius = 500.0f;
 
-    // Timer handle for updating target location
     FTimerHandle UpdateTimerHandle;
 
-    // Update target location for wandering
     void UpdateTargetLocation();
 };

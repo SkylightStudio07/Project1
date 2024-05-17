@@ -15,7 +15,7 @@ AProject1GameMode::AProject1GameMode()
     CurrentAlertGuage = 0;
     CurrentRecogGuage = 0;
     MaxAlertGuage = 100.0f;
-    MaxRecogGuage = 10000.0f;
+    MaxRecogGuage = 100.0f;
     /*
     if (PlayerHUDClass)
     {
@@ -94,6 +94,7 @@ void AProject1GameMode::SetRecogGuage(float GuageAmount) {
 
     if (Percentage >= 1 && CurrentWorldStatus == WorldStatus::Safe) {
         CurrentWorldStatus = WorldStatus::Caution;
+        SetAlertGuage(30.0f);
         UE_LOG(LogTemp, Error, TEXT("Recognition ProgrerssBar is Full. Transited to Caution Status."));
     }
 }

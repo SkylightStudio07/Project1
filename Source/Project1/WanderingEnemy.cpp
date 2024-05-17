@@ -22,7 +22,23 @@ void AWanderingEnemy::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
-    if (!IsChasing) { MoveToTarget(TargetLocation); }
+    if (!IsChasing)
+    {
+        // Calculate direction to the target location
+        FVector Direction = (TargetLocation - GetActorLocation()).GetSafeNormal();
+
+        // Rotate the enemy to face the direction of movement
+        FRotator NewRotation = Direction.Rotation();
+        SetActorRotation(NewRotation);
+
+        // Move towards the target location
+        MoveToTarget(TargetLocation);
+
+        if (AnimInstance)
+        {
+            AnimInstance->IsMoving = true; // 이동 중임을 설정
+        }
+    }
 }
 
 // Update target location for wandering

@@ -10,15 +10,12 @@ ABulletPickup::ABulletPickup()
     // Set this actor to call Tick() every frame
     PrimaryActorTick.bCanEverTick = true;
 
-    // Create a sphere component for collision
     CollisionComponent = CreateDefaultSubobject<USphereComponent>(TEXT("CollisionComponent"));
     CollisionComponent->InitSphereRadius(50.0f);
     RootComponent = CollisionComponent;
 
-    // Set default bullet amount
     BulletAmount = 10;
 
-    // Bind overlap function
     CollisionComponent->OnComponentBeginOverlap.AddDynamic(this, &ABulletPickup::OnOverlapBegin);
 }
 
@@ -44,11 +41,8 @@ void ABulletPickup::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AAc
         AProject1Character* Character = Cast<AProject1Character>(OtherActor);
         if (Character)
         {
-            // Add bullets to the character
             Character->Bullets += BulletAmount;
             Character->ItemPickup();
-
-            // Destroy the pickup after collecting bullets
             Destroy();
         }
     }

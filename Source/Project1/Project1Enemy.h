@@ -15,13 +15,6 @@ public:
     // Sets default values for this character's properties
     AProject1Enemy();
 
-    /*
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy")
-        float RecogDistance;
-
-    */
-
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy")
         float EnemyMoveSpeed;
 
@@ -41,7 +34,6 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy")
         bool isRecognizingPlayer;
 
-    // Function to play scream animation
     void PlayScreamAnimation();
 
     bool IsScreaming;
@@ -71,21 +63,37 @@ public:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Recognition")
         float RecognitionRadius;
 
+    UFUNCTION(BlueprintCallable, Category = "Recognition")
     void IncreaseRecognitionGauge();
 
+    UFUNCTION(BlueprintCallable, Category = "Recognition")
     void OnPlayerEnterRecognitionVolume(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
         UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
         const FHitResult& SweepResult);
 
-    // Function to change world status to Caution when recognition gauge is full
-    // void CheckWorldStatus();
-
+    UFUNCTION()
+        void OnPlayerExitRecognitionVolume(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+            UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 
 protected:
     // Called when the game starts or when spawned
     virtual void BeginPlay() override;
     
+    // 게이지 증가 타이머를 시작하는 함수
+    void StartRecognitionGaugeIncrease();
+
+    // 게이지 증가 타이머를 멈추는 함수
+    void StopRecognitionGaugeIncrease();
+
+    // 게이지를 시간에 따라 증가시키는 함수
+    // void IncreaseGaugeOverTime();
+
+    // 현재 게이지가 증가 중인지 여부
+    bool bIsGaugeIncreaseTimerActive;
+
+    // 게이지 증가 타이머 핸들
+    FTimerHandle GaugeIncreaseTimerHandle;
 
 public:
     // Called every frame
@@ -94,15 +102,10 @@ public:
     // Called to bind functionality to input
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-    // Function to handle enemy movement
     void MoveToTarget(const FVector& TargetLocation);
 
     // Function to handle enemy taking damage
     virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
-
-    /*
-    void DrawVisionCone();
-    */
 
     void UpdateUIPosition();
 
@@ -116,7 +119,6 @@ public:
     
 
 public:
-    // Target location for enemy movement
     FVector TargetLocation;
     FVector TargetMovementLocation;
 
