@@ -20,34 +20,34 @@
 
 AProject1Character::AProject1Character()
 {
-    // Set size for collision capsule
+    // 충돌 캡슐 크기 설정
     GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 
-    // Set our turn rates for input
+    // 입력을 위한 기본 회전 속도 설정
     BaseTurnRate = 45.f;
     BaseLookUpRate = 45.f;
 
-    // Don't rotate when the controller rotates. Let that just affect the camera.
+    // 컨트롤러가 회전할 때 캐릭터가 회전하지 않도록 설정. 카메라만 회전
     bUseControllerRotationPitch = false;
     bUseControllerRotationYaw = false;
     bUseControllerRotationRoll = false;
 
-    // Configure character movement
-    GetCharacterMovement()->bOrientRotationToMovement = true; // Character moves in the direction of input...	
-    GetCharacterMovement()->RotationRate = FRotator(0.0f, 540.0f, 0.0f); // ...at this rotation rate
+    // 캐릭터 움직임 설정
+    GetCharacterMovement()->bOrientRotationToMovement = true;
+    GetCharacterMovement()->RotationRate = FRotator(0.0f, 540.0f, 0.0f);
     GetCharacterMovement()->JumpZVelocity = 600.f;
     GetCharacterMovement()->AirControl = 0.2f;
 
-    // Create a camera boom (pulls in towards the player if there is a collision)
+    // 카메라 붐 생성 (충돌 시 플레이어 쪽으로 당겨짐)
     CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
     CameraBoom->SetupAttachment(RootComponent);
-    CameraBoom->TargetArmLength = 200.0f; // The camera follows at this distance behind the character    
-    CameraBoom->bUsePawnControlRotation = true; // Rotate the arm based on the controller
+    CameraBoom->TargetArmLength = 200.0f;
+    CameraBoom->bUsePawnControlRotation = true;
 
-    // Create a follow camera
+    // 팔로우 카메라 생성
     FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
-    FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
-    FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
+    FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
+    FollowCamera->bUsePawnControlRotation = false;
 
     // 플레이어 애님 인스턴스 생성
    //PlayerAnimInstance = CreateDefaultSubobject<UProject1AnimInstance>(TEXT("PlayerAnimInstance"));
@@ -81,6 +81,10 @@ AProject1Character::AProject1Character()
     Bullets = 60;
     CanFire = true;
     bIsCrouching = false;
+
+
+    MaxWalkSpeed = 600.0f;
+    MaxWalkSpeedCrouched = 300.0f;  // 웅크려서 걷기 속도 설정
 
 }
 
@@ -117,6 +121,7 @@ void AProject1Character::SetupPlayerInputComponent(class UInputComponent* Player
 void AProject1Character::BeginPlay()
 {
     Super::BeginPlay();
+    GetCharacterMovement()->MaxWalkSpeed = MaxWalkSpeed;
 
     // PlayerAnimInstance 초기화
     PlayerAnimInstance = Cast<UProject1AnimInstance>(GetMesh()->GetAnimInstance());
@@ -140,10 +145,26 @@ void AProject1Character::BeginPlay()
     }
 }
 
-void AProject1Character::Tick(float DeltaTime) {
-    Super::Tick(DeltaTime);
+void AProject1Character::ChangeMovementSpeed(float NewSpeed)
+{
+    // 이동 속도 변경
+    MaxWalkSpeed = NewSpeed;
+    GetCharacterMovement()->MaxWalkSpeed = MaxWalkSpeed;
 }
 
+void AProject1Character::Tick(float DeltaTime) {
+    Super::Tick(DeltaTime);
+
+    if (bIsFiring)
+    {
+        // 카메라의 회전을 가져오기
+        FRotator CameraRotation = FollowCamera->GetComponentRotation();
+        CameraRotation.Roll = 0.0f; // Roll은 무시할 수 있습니다.
+
+        // 캐릭터 회전을 카메라의 회전과 일치시킴
+        SetActorRotation(CameraRotation);
+    }
+}
 void AProject1Character::Fire()
 {
     ReloadManager();
@@ -263,7 +284,11 @@ void AProject1Character::SetControlMode(int32 ControlMode)
         CameraBoom->bInheritRoll = true;
         CameraBoom->bInheritYaw = true;
         CameraBoom->bDoCollisionTest = true;
-        bUseControllerRotationYaw = false;
+
+        bUseControllerRotationYaw = true;
+        bUseControllerRotationPitch = true;
+        bUseControllerRotationRoll = true;
+        GetCharacterMovement()->bOrientRotationToMovement = false;
     }
     else if (ControlMode == 1) // FPS
     {

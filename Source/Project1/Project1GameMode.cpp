@@ -32,6 +32,9 @@ AProject1GameMode::AProject1GameMode()
         UE_LOG(LogTemp, Error, TEXT("PlayerHUD class is not set!"));
     }
     */
+
+    // IsDoorReadyToOpen 초기화
+    IsDoorReadyToOpen = false;
 }
 
 void AProject1GameMode::BeginPlay()

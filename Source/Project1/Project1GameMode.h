@@ -65,6 +65,9 @@ public:
     UPROPERTY(EditDefaultsOnly, Category = "UI")
         TSubclassOf<UPlayerHUD> PlayerHUDClass;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GamePlay")
+        bool IsDoorReadyToOpen;
+
 };
 
 

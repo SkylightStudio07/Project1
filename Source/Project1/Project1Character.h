@@ -63,6 +63,15 @@ protected:
     virtual void BeginPlay() override;
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player")
+        float MaxWalkSpeed;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player")
+        float MaxWalkSpeedCrouched;
+
+    UFUNCTION(BlueprintCallable, Category = "Player")
+    void ChangeMovementSpeed(float NewSpeed);
+
     FTimerHandle FireTimerHandle;
 
     void TouchStarted(ETouchIndex::Type FingerIndex, FVector Location);
