@@ -58,6 +58,12 @@ public:
 
     virtual void Tick(float DeltaTime) override;
 
+    UFUNCTION(BlueprintCallable, Category = "Player")
+        UPlayerHUD* GetPlayerHUD() const;
+
+    UPROPERTY()
+        UPlayerHUD* PlayerHUD;
+
 
 protected:
     virtual void BeginPlay() override;
@@ -71,6 +77,13 @@ protected:
 
     UFUNCTION(BlueprintCallable, Category = "Player")
     void ChangeMovementSpeed(float NewSpeed);
+
+
+
+    UPROPERTY(EditAnywhere, Category = "Player")
+        TSubclassOf<UPlayerHUD> PlayerHUDClass;
+
+    // PlayerHUD 인스턴스
 
     FTimerHandle FireTimerHandle;
 

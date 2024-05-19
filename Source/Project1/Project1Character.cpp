@@ -143,6 +143,19 @@ void AProject1Character::BeginPlay()
     {
         UE_LOG(LogTemp, Error, TEXT("Failed to initialize GunAnimInstance!"));
     }
+
+    if (PlayerHUDClass)
+    {
+        APlayerController* PlayerController = Cast<APlayerController>(GetController());
+        if (PlayerController)
+        {
+            PlayerHUD = CreateWidget<UPlayerHUD>(PlayerController, PlayerHUDClass);
+            if (PlayerHUD)
+            {
+                PlayerHUD->AddToViewport();
+            }
+        }
+    }
 }
 
 void AProject1Character::ChangeMovementSpeed(float NewSpeed)
@@ -459,4 +472,9 @@ void AProject1Character::ReloadManager() {
 
 void AProject1Character::ItemPickup() {
     UpdateAmmoText(Bullets);
+}
+
+UPlayerHUD* AProject1Character::GetPlayerHUD() const
+{
+    return PlayerHUD;
 }

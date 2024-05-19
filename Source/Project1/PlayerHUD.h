@@ -6,9 +6,6 @@
 #include "Blueprint/UserWidget.h"
 #include "PlayerHUD.generated.h"
 
-/**
- * 
- */
 UCLASS()
 class PROJECT1_API UPlayerHUD : public UUserWidget
 {
@@ -17,20 +14,34 @@ class PROJECT1_API UPlayerHUD : public UUserWidget
 public:
 
 	// 총알 잔량 텍스트
-
 	UFUNCTION(BlueprintCallable)
 		void SetAmmoText(int32 RemainingAmmo);
 
 	// 이 섹션은 Alert ProgressBar을 관장
-
 	UFUNCTION(BlueprintCallable)
 		void SetAlertProgressBar(float ParaGuage);
 	UFUNCTION(BlueprintCallable)
 		void SetAlertProgressBarColorWithAlertLevel(int32 Status);
 
 	// 이 섹션은 Recognition ProgressBar을 관장
-
 	UFUNCTION(BlueprintCallable)
 		void SetRecogProgressBar(float ParaGuage);
+
+	// 대사를 출력하는 함수
+	UFUNCTION(BlueprintCallable, Category = "Dialog")
+		void DisplayDialog(FText DialogText);
+
+protected:
+	UPROPERTY(meta = (BindWidget))
+		class UTextBlock* AmmoText;
+
+	UPROPERTY(meta = (BindWidget))
+		class UProgressBar* AlertProgressBar;
+
+	UPROPERTY(meta = (BindWidget))
+		class UProgressBar* RecogProgressBar;
+
+	UPROPERTY(meta = (BindWidget))
+		class UTextBlock* DialogTextBlock;
 	
 };

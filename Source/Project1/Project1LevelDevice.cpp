@@ -1,11 +1,10 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "Project1LevelDevice.h"
 #include "Components/BoxComponent.h"
 #include "Project1Character.h"
 #include "Project1GameMode.h"
 #include "Engine/World.h"
+#include "TimerManager.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 AProject1LevelDevice::AProject1LevelDevice()
@@ -23,6 +22,9 @@ AProject1LevelDevice::AProject1LevelDevice()
 
     // 트리거 진입 이벤트를 바인딩합니다.
     TriggerBox->OnComponentBeginOverlap.AddDynamic(this, &AProject1LevelDevice::OnTriggerBoxOverlapBegin);
+
+    // 이벤트 플래그 초기화
+    bEventTriggered = false;
 }
 
 // Called when the game starts or when spawned
@@ -41,29 +43,61 @@ void AProject1LevelDevice::OnTriggerBoxOverlapBegin(UPrimitiveComponent* Overlap
     UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
     bool bFromSweep, const FHitResult& SweepResult)
 {
+    // 이벤트가 이미 실행되었는지 확인합니다.
+    if (bEventTriggered)
+    {
+        return;
+    }
+
     // 플레이어 캐릭터가 트리거 박스에 진입했는지 확인합니다.
     AProject1Character* PlayerCharacter = Cast<AProject1Character>(OtherActor);
     if (PlayerCharacter)
     {
-        if (LevelDVStat == LevelDV::DoorLockPick) {
+        UE_LOG(LogTemp, Warning, TEXT("Player Entered Level Device Trigger"));
 
-            // GameMode를 가져와서 IsDoorReadyToOpen 변수를 true로 설정합니다.
-            AProject1GameMode* GameMode = Cast<AProject1GameMode>(GetWorld()->GetAuthGameMode());
-            if (GameMode)
-            {
-                GameMode->IsDoorReadyToOpen = true;
-            }
+
+        AProject1GameMode* GameMode = Cast<AProject1GameMode>(GetWorld()->GetAuthGameMode());
+        if (!GameMode)
+        {
+            UE_LOG(LogTemp, Warning, TEXT("Cannot Find GameMode -> LevelDevice"));
+            return;
         }
-        if (LevelDVStat == LevelDV::DoorOpener) {
 
-            // GameMode를 가져와서 IsDoorReadyToOpen 변수를 true로 설정합니다.
-            AProject1GameMode* GameMode = Cast<AProject1GameMode>(GetWorld()->GetAuthGameMode());
-            if (GameMode)
-            {
-                if (GameMode->IsDoorReadyToOpen == true) {
-
-                }
-            }
+        UPlayerHUD* PlayerHUD = PlayerCharacter->GetPlayerHUD();
+        if (!PlayerHUD)
+        {
+            UE_LOG(LogTemp, Warning, TEXT("Cannot Find PlayerHUD -> LevelDevice"));
+            return;
         }
+
+        if (LevelDVStat == LevelDV::DoorLockPick)
+        {
+            GameMode->IsDoorReadyToOpen = true;
+
+            // 대사 출력
+            PlayerHUD->DisplayDialog(FText::FromString("The door lock pick is ready!"));
+        }
+        else if (LevelDVStat == LevelDV::DoorOpener && GameMode->IsDoorReadyToOpen)
+        {
+            // 이벤트가 실행되었음을 표시
+            bEventTriggered = true;
+
+            // 대사 출력
+            PlayerHUD->DisplayDialog(FText::FromString("The door is ready to open!"));
+
+            // 30초 후에 MyLevelTransferVolumeBlueprint를 생성하는 타이머 설정
+            GetWorldTimerManager().SetTimer(TimerHandle, this, &AProject1LevelDevice::SpawnLevelTransferVolume, 30.0f, false);
+        }
+    }
+}
+
+void AProject1LevelDevice::SpawnLevelTransferVolume()
+{
+    // MyLevelTransferVolumeBlueprint를 생성합니다.
+    static ConstructorHelpers::FClassFinder<AActor> LevelTransferVolumeBP(TEXT("/Game/Blueprints/MyLevelTransferVolumeBlueprint"));
+    if (LevelTransferVolumeBP.Succeeded())
+    {
+        FActorSpawnParameters SpawnParams;
+        GetWorld()->SpawnActor<AActor>(LevelTransferVolumeBP.Class, GetActorLocation(), FRotator::ZeroRotator, SpawnParams);
     }
 }

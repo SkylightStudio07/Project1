@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -33,6 +31,9 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay")
         LevelDV LevelDVStat;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay")
+        class AProject1Character* Player;
+
 private:
     // 트리거 박스 컴포넌트
     UPROPERTY(VisibleAnywhere, Category = "Components")
@@ -44,5 +45,13 @@ private:
             UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
             bool bFromSweep, const FHitResult& SweepResult);
 
+    // 타이머 핸들
+    FTimerHandle TimerHandle;
+
+    // 이벤트 플래그
+    bool bEventTriggered;
+
+    // 레벨 전환 볼륨을 생성하는 함수
+    void SpawnLevelTransferVolume();
 
 };
