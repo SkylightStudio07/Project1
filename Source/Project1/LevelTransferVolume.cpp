@@ -27,9 +27,16 @@ void ALevelTransferVolume::Tick(float DeltaTime)
 
 }
 
-void ALevelTransferVolume::NotifyActorBeginOverlap(AActor* OtherActor) {
-	APawn* Pawn = Cast<APawn>(OtherActor);
-	if (Pawn != nullptr) { 
-		UGameplayStatics::OpenLevel(this, FName(*TransferLevelName));
-	}
+void ALevelTransferVolume::NotifyActorBeginOverlap(AActor* OtherActor)
+{
+    APawn* Pawn = Cast<APawn>(OtherActor);
+    if (Pawn != nullptr)
+    {
+        UGameplayStatics::OpenLevel(this, FName(*TransferLevelName));
+    }
+}
+
+void ALevelTransferVolume::SetTransferLevelName(const FString& LevelName)
+{
+    TransferLevelName = LevelName;
 }

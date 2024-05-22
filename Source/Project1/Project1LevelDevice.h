@@ -2,13 +2,20 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "LevelTransferVolume.h"
 #include "Project1LevelDevice.generated.h"
 
 UENUM(BlueprintType)
 enum class LevelDV : uint8
 {
+    World2Opening UMETA(DisplayName = "World2Opening"),
+    World2Progress1 UMETA(DisplayName = "World2Progress1"),
+    World2Progress2 UMETA(DisplayName = "World2Progress2"),
+    World2Progress3 UMETA(DisplayName = "World2Progress3"),
+    World2Progress4 UMETA(DisplayName = "World2Progress4"),
+    World2Progress5 UMETA(DisplayName = "World2Progress5"),
     DoorLockPick UMETA(DisplayName = "DoorLockPick"),
-    DoorOpener UMETA(DisplayName = "DoorOpener"),
+    DoorOpener UMETA(DisplayName = "DoorOpener")
 };
 
 UCLASS()
@@ -19,6 +26,8 @@ class PROJECT1_API AProject1LevelDevice : public AActor
 public:
     // Sets default values for this actor's properties
     AProject1LevelDevice();
+
+    void DeactivateDevice();
 
 protected:
     // Called when the game starts or when spawned
@@ -33,6 +42,8 @@ public:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay")
         class AProject1Character* Player;
+
+
 
 private:
     // 트리거 박스 컴포넌트
@@ -51,7 +62,13 @@ private:
     // 이벤트 플래그
     bool bEventTriggered;
 
-    // 레벨 전환 볼륨을 생성하는 함수
+    UFUNCTION(BlueprintCallable, Category = "Gameplay")
     void SpawnLevelTransferVolume();
+
+    UPROPERTY(EditDefaultsOnly, Category = "Gameplay")
+        TSubclassOf<ALevelTransferVolume> LevelTransferVolumeClass;
+
+    bool bIsActive;
+
 
 };

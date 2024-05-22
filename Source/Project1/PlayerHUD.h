@@ -13,6 +13,8 @@ class PROJECT1_API UPlayerHUD : public UUserWidget
 
 public:
 
+	UPlayerHUD(const FObjectInitializer& ObjectInitializer);
+
 	// 총알 잔량 텍스트
 	UFUNCTION(BlueprintCallable)
 		void SetAmmoText(int32 RemainingAmmo);
@@ -29,9 +31,22 @@ public:
 
 	// 대사를 출력하는 함수
 	UFUNCTION(BlueprintCallable, Category = "Dialog")
-		void DisplayDialog(FText DialogText);
+		void DisplayDialog(const FText& Message, class AProject1LevelDevice* DeviceToDeactivate);
+
+	UFUNCTION(BlueprintCallable, Category = "Dialog")
+		void HideDialog();
+
+	FTimerHandle DialogTimerHandle;
+
+	AProject1LevelDevice* TargetDevice;
+
+	void SetTimer_World1();
 
 protected:
+
+	virtual void NativeConstruct() override;
+
+	/*
 	UPROPERTY(meta = (BindWidget))
 		class UTextBlock* AmmoText;
 
@@ -40,8 +55,22 @@ protected:
 
 	UPROPERTY(meta = (BindWidget))
 		class UProgressBar* RecogProgressBar;
+		*/
 
 	UPROPERTY(meta = (BindWidget))
 		class UTextBlock* DialogTextBlock;
+
+	UPROPERTY(meta = (BindWidget))
+		class UTextBlock* TimerText;
+
+	UPROPERTY(meta = (BindWidget))
+		class UTextBlock* Timer;
 	
+	UPROPERTY()
+		class UFont* KoreanFont;
+
+	FTimerHandle TimerHandle_World1;
+	int32 CountdownTime;
+
+	void UpdateTimer();
 };

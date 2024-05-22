@@ -23,6 +23,10 @@ class AProject1GameMode : public AGameModeBase
 protected:
     virtual void BeginPlay() override;
 
+    // 특정 상황에서 스폰시킬 때 체크
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GamePlay")
+        bool IsTriggerSpawn;
+
 public:
 
 	AProject1GameMode();
@@ -67,6 +71,11 @@ public:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GamePlay")
         bool IsDoorReadyToOpen;
+
+    void SpawnTriggerEnemies();
+
+    UFUNCTION(BlueprintCallable)
+    bool GetIsTriggerSpawn();
 
 };
 

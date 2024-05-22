@@ -21,14 +21,28 @@ protected:
     // Called when the game starts or when spawned
     virtual void BeginPlay() override;
 
-public:
-    // Called every frame
-    virtual void Tick(float DeltaTime) override;
+    UPROPERTY(EditAnywhere)
+        bool IsTriggerSpawn;
 
-private:
     UPROPERTY(EditAnywhere)
         TSubclassOf<AProject1Enemy> EnemyClass;
 
     float SpawnInterval;
     float CurrentSpawnTime;
+
+    int32 SpawnCount;
+
+    UPROPERTY(EditAnywhere)
+        int32 MaxSpawnCount = 3; // 스폰할 최대 적 수
+
+public:
+    // Called every frame
+    virtual void Tick(float DeltaTime) override;
+
+
+
+private:
+
+
+
 };

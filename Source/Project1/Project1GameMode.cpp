@@ -16,6 +16,7 @@ AProject1GameMode::AProject1GameMode()
     CurrentRecogGuage = 0;
     MaxAlertGuage = 100.0f;
     MaxRecogGuage = 100.0f;
+
     /*
     if (PlayerHUDClass)
     {
@@ -35,6 +36,7 @@ AProject1GameMode::AProject1GameMode()
 
     // IsDoorReadyToOpen 초기화
     IsDoorReadyToOpen = false;
+    IsTriggerSpawn = false;
 }
 
 void AProject1GameMode::BeginPlay()
@@ -105,4 +107,12 @@ void AProject1GameMode::SetRecogGuage(float GuageAmount) {
 WorldStatus AProject1GameMode::GetCurrentWorldStatus() const
 {
     return CurrentWorldStatus;
+}
+
+void AProject1GameMode::SpawnTriggerEnemies() {
+    IsTriggerSpawn = true;
+}
+
+bool AProject1GameMode::GetIsTriggerSpawn() {
+    return IsTriggerSpawn;
 }

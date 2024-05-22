@@ -21,7 +21,7 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
+	
 
 private:
 	UPROPERTY(EditAnywhere, Category = MapData, meta = (AllowPrivateAccess = "true"))
@@ -30,7 +30,12 @@ private:
 		class UBoxComponent* TransferVolume;
 
 public:	
+
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	UFUNCTION()
+	void NotifyActorBeginOverlap(AActor* OtherActor);
+
+	void SetTransferLevelName(const FString& LevelName);
 };
