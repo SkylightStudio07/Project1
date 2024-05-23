@@ -28,6 +28,9 @@ public:
     UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Animation")
         bool IsAlert;
 
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Animation")
+        bool IsAttacking;
+
     UFUNCTION(BlueprintCallable, Category = "Animation")
         void GetCurrentWorldStatus_Idle();
 

@@ -75,6 +75,20 @@ public:
         void OnPlayerExitRecognitionVolume(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
             UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Attack")
+        class USphereComponent* AttackRange;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attack")
+        float AttackRadius;
+
+    UFUNCTION()
+        void OnPlayerEnterAttackRange(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+            UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
+            const FHitResult& SweepResult);
+
+    UFUNCTION()
+        void OnPlayerExitAttackRange(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+            UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 protected:
     // Called when the game starts or when spawned
@@ -89,11 +103,21 @@ protected:
     // 게이지를 시간에 따라 증가시키는 함수
     // void IncreaseGaugeOverTime();
 
-    // 현재 게이지가 증가 중인지 여부
+    // 현재 게이지 증가 여부
     bool bIsGaugeIncreaseTimerActive;
 
     // 게이지 증가 타이머 핸들
     FTimerHandle GaugeIncreaseTimerHandle;
+
+    bool IsDead;
+
+    UPROPERTY(EditAnywhere, Category = "Death")
+        float TimeBeforeRemoval;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+        USkeletalMeshComponent* SkeletalMesh;
+
+    FTimerHandle TimerHandle;
 
 public:
     // Called every frame
@@ -105,7 +129,11 @@ public:
     void MoveToTarget(const FVector& TargetLocation);
 
     // Function to handle enemy taking damage
-    virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
+    virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
+        class AController* EventInstigator, AActor* DamageCauser) override;
+
+    void Die();
+    void OnDeathFinished();
 
     void UpdateUIPosition();
 
@@ -117,9 +145,12 @@ public:
 
     void PlayerChase_PlayerNOTCrouch(float RecogDistance);
     
+    void AttackPlayer();
 
 public:
     FVector TargetLocation;
     FVector TargetMovementLocation;
 
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Collision")
+        class UCapsuleComponent* CollisionCylinder;
 };

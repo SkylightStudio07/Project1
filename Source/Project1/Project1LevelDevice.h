@@ -8,12 +8,23 @@
 UENUM(BlueprintType)
 enum class LevelDV : uint8
 {
+    World1Opening UMETA(DisplayName = "World1Opening"),
+    World1Progress1 UMETA(DisplayName = "World1Progress1"),
+    World1Progress2 UMETA(DisplayName = "World2Progress2"),
+    World1Progress3 UMETA(DisplayName = "World3Progress3"),
     World2Opening UMETA(DisplayName = "World2Opening"),
     World2Progress1 UMETA(DisplayName = "World2Progress1"),
     World2Progress2 UMETA(DisplayName = "World2Progress2"),
     World2Progress3 UMETA(DisplayName = "World2Progress3"),
     World2Progress4 UMETA(DisplayName = "World2Progress4"),
     World2Progress5 UMETA(DisplayName = "World2Progress5"),
+    World3Opening UMETA(DisplayName = "World3Opening"),
+    World3Progress1 UMETA(DisplayName = "World3Progress1"),
+    World3Progress2 UMETA(DisplayName = "World3Progress2"),
+    World3Progress3 UMETA(DisplayName = "World3Progress3"),
+    World3Progress4 UMETA(DisplayName = "World3Progress4"),
+    World3Progress5 UMETA(DisplayName = "World3Progress5"),
+    AcquireVaccine UMETA(DisplayName = "AcquireVaccine"),
     DoorLockPick UMETA(DisplayName = "DoorLockPick"),
     DoorOpener UMETA(DisplayName = "DoorOpener")
 };
@@ -30,7 +41,6 @@ public:
     void DeactivateDevice();
 
 protected:
-    // Called when the game starts or when spawned
     virtual void BeginPlay() override;
 
 public:

@@ -91,6 +91,9 @@ void AProject1LevelDevice::OnTriggerBoxOverlapBegin(UPrimitiveComponent* Overlap
         // 여기서부터는 다이얼로그와 해당 상황에 대응하는 기타 처리를 관리
         switch (LevelDVStat)
         {
+        case LevelDV::World1Opening:
+            KoreanMessage = FString(TEXT("오퍼레이터 : 작전 목표는 샘플의 확보와 실종된 오시리스 팀에 대한 추적.\n신속하게 움직여라. 생존자가 있을지도 모른다."));
+            break;
         case LevelDV::World2Opening:
             KoreanMessage = FString(TEXT("오퍼레이터 : 더럽게 어둡군.... 빌어먹을.\n감염체가 얼마나 있을지 모른다. 발포는 어지간하면 자제하도록. "));
             break;
@@ -109,9 +112,30 @@ void AProject1LevelDevice::OnTriggerBoxOverlapBegin(UPrimitiveComponent* Overlap
         case LevelDV::World2Progress5:
             KoreanMessage = FString(TEXT("치프 : 저 감염체는.... 무언가 이상합니다.\n오퍼레이터 : 터커. 저 자식에게는 어지간해서는 가까이 가지 마."));
             break;
+        case LevelDV::World3Opening:
+            KoreanMessage = FString(TEXT("치프 : 오시리스 2의 유해를 확인, 생명 반응 없음.\n오퍼레이터 : 젠장, 불쌍한 놈들."));
+            break;
+        case LevelDV::World3Progress1:
+            KoreanMessage = FString(TEXT("오퍼레이터 : 알고 있겠지만 시설 내부의 감염체들도 대강 깨어났을 거다.\n이 시점부터 잠입은 불가능하다고 생각하고 움직여."));
+            break;
+        case LevelDV::World3Progress4:
+            KoreanMessage = FString(TEXT("치프 : 오시리스 1을 제외한 모든 오시리스 팀을 확인. 전원 생명 반응 없음.\n오퍼레이터 : 방 좌측에 샘플 확인! 이 불쌍한 자식들. 찾아놓고 제때 빠져나오질 못했어."));
+            break;
+        case LevelDV::World3Progress5:
+            KoreanMessage = FString(TEXT("오퍼레이터 : 네 손에 모든 것이 걸려있다, 터커! 달려!"));
+            break;
         case LevelDV::DoorLockPick:
             GameMode->IsDoorReadyToOpen = true;
             KoreanMessage = FString(TEXT("치프 : 데이터키군요. \n오퍼레이터 : 자, 신속하게 다시 문으로 움직인다."));
+            break;
+        case LevelDV::AcquireVaccine:
+            bEventTriggered = true;
+
+            GameMode->SpawnTriggerEnemies();
+            GameMode->SetCurrentWorldStatus(WorldStatus::Caution);
+
+            PlayerHUD->SetTimer_World1();
+            KoreanMessage = FString(TEXT("치프 : 샘플 습득 완료...? 시설 대부분에서 감염체 신호 확인!\n 오퍼레이터 : 산 넘어 산이다. 당장 빠져나와, 터커!"));
             break;
         case LevelDV::DoorOpener:
             if (GameMode->IsDoorReadyToOpen) {
@@ -179,7 +203,7 @@ void AProject1LevelDevice::SpawnLevelTransferVolume()
             ALevelTransferVolume* LevelTransferVolume = Cast<ALevelTransferVolume>(SpawnedActor);
             if (LevelTransferVolume)
             {
-                LevelTransferVolume->SetTransferLevelName(TEXT("World1"));
+                LevelTransferVolume->SetTransferLevelName(TEXT("World3"));
                 UE_LOG(LogTemp, Warning, TEXT("LevelTransferVolume spawned and set to transfer to World1"));
             }
             else

@@ -108,7 +108,7 @@ void AProject1Character::SetupPlayerInputComponent(class UInputComponent* Player
     // Bind control mode functions
     PlayerInputComponent->BindAction("SetTPS", IE_Pressed, this, &AProject1Character::SetControlModeTPS);
     PlayerInputComponent->BindAction("SetFPS", IE_Pressed, this, &AProject1Character::SetControlModeFPS);
-    PlayerInputComponent->BindAction("SetTopView", IE_Pressed, this, &AProject1Character::SetControlModeTopView);
+    // PlayerInputComponent->BindAction("SetTopView", IE_Pressed, this, &AProject1Character::SetControlModeTopView);
 
     PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &AProject1Character::Crouching);
     PlayerInputComponent->BindAction("CrouchEnd", IE_Released, this, &AProject1Character::CrouchingEnd);
@@ -156,6 +156,8 @@ void AProject1Character::BeginPlay()
             }
         }
     }
+
+    SetControlMode(0);
 }
 
 void AProject1Character::ChangeMovementSpeed(float NewSpeed)
@@ -178,6 +180,24 @@ void AProject1Character::Tick(float DeltaTime) {
         SetActorRotation(CameraRotation);
     }
 }
+
+float AProject1Character::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+    float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+    if (ActualDamage > 0.0f)
+    {
+        PlayerHP -= ActualDamage;
+
+        if (PlayerHP <= 0.0f)
+        {
+            // Handle player death, such as playing death animation, game over screen, etc.
+            // For now, just destroy the actor
+            Destroy();
+        }
+    }
+    return ActualDamage;
+}
+
 void AProject1Character::Fire()
 {
     ReloadManager();

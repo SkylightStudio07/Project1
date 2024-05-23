@@ -64,9 +64,19 @@ public:
     UPROPERTY()
         UPlayerHUD* PlayerHUD;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
+        float PlayerHP;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
+        float MaxHP;
+
+    virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
+        class AController* EventInstigator, AActor* DamageCauser) override;
+
 
 protected:
     virtual void BeginPlay() override;
+
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player")
@@ -78,12 +88,8 @@ protected:
     UFUNCTION(BlueprintCallable, Category = "Player")
     void ChangeMovementSpeed(float NewSpeed);
 
-
-
     UPROPERTY(EditAnywhere, Category = "Player")
         TSubclassOf<UPlayerHUD> PlayerHUDClass;
-
-    // PlayerHUD 인스턴스
 
     FTimerHandle FireTimerHandle;
 

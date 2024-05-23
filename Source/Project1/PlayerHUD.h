@@ -48,14 +48,13 @@ protected:
 
 	/*
 	UPROPERTY(meta = (BindWidget))
-		class UTextBlock* AmmoText;
-
+		class UTextBlock* AmmoText;*/
 	UPROPERTY(meta = (BindWidget))
 		class UProgressBar* AlertProgressBar;
 
 	UPROPERTY(meta = (BindWidget))
 		class UProgressBar* RecogProgressBar;
-		*/
+		
 
 	UPROPERTY(meta = (BindWidget))
 		class UTextBlock* DialogTextBlock;

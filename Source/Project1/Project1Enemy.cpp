@@ -10,6 +10,10 @@
 #include "TimerManager.h"
 #include "Components/WidgetComponent.h"
 #include "EnemyHPWidget.h"
+#include "Components/MeshComponent.h"
+#include "Components/CapsuleComponent.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Project1GameMode.h"
 #include "Components/ProgressBar.h"
 
@@ -27,6 +31,30 @@ AProject1Enemy::AProject1Enemy()
     IsChasing = false;
     isRecognizingPlayer = false;
 
+    // RootComponent 설정
+    RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
+
+    // 스켈레탈 메쉬
+    SkeletalMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SkeletalMesh"));
+    SkeletalMesh->SetupAttachment(RootComponent);
+    SkeletalMesh->SetCollisionProfileName(TEXT("CharacterMesh"));
+
+    // 애니메이션 블루프린트
+    static ConstructorHelpers::FObjectFinder<USkeletalMesh> SkeletalMeshAsset(TEXT("/Game/Enemies/Ch10_nonPBR.Ch10_nonPBR"));
+    if (SkeletalMeshAsset.Succeeded())
+    {
+        SkeletalMesh->SetSkeletalMesh(SkeletalMeshAsset.Object);
+
+        static ConstructorHelpers::FClassFinder<UEnemyAnimInstance> AnimBPClass(TEXT("/Game/Enemies/DefaultAnimBlueprint.DefaultAnimBlueprint_C"));
+        if (AnimBPClass.Succeeded())
+        {
+            SkeletalMesh->SetAnimInstanceClass(AnimBPClass.Class);
+        }
+        else {
+            UE_LOG(LogTemp, Error, TEXT("Failed to Load AnimInstance in CS"));
+        }
+    }
+
     static ConstructorHelpers::FObjectFinder<UAnimMontage> ZombieScreamMontageAsset(TEXT("/Game/Enemies/ZombieScreamMontage.ZombieScreamMontage"));
     if (ZombieScreamMontageAsset.Succeeded()) { ZombieScreamMontage = ZombieScreamMontageAsset.Object; }
     else { UE_LOG(LogTemp, Error, TEXT("Failed to load ZombieScreamMontage!")); }
@@ -39,9 +67,23 @@ AProject1Enemy::AProject1Enemy()
 
         RecognitionVolume->SetupAttachment(RootComponent);
         RecognitionVolume->OnComponentBeginOverlap.AddDynamic(this, &AProject1Enemy::OnPlayerEnterRecognitionVolume);
+        RecognitionVolume->OnComponentEndOverlap.AddDynamic(this, &AProject1Enemy::OnPlayerExitRecognitionVolume);
+    }
+
+    AttackRange = CreateDefaultSubobject<USphereComponent>(TEXT("AttackRange"));
+    if (AttackRange)
+    {
+        AttackRange->InitSphereRadius(AttackRadius);
+        AttackRange->SetCollisionProfileName(TEXT("Trigger"));
+        AttackRange->SetupAttachment(RootComponent);
+        AttackRange->OnComponentBeginOverlap.AddDynamic(this, &AProject1Enemy::OnPlayerEnterAttackRange);
+        AttackRange->OnComponentEndOverlap.AddDynamic(this, &AProject1Enemy::OnPlayerExitAttackRange);
     }
 
     bIsGaugeIncreaseTimerActive = false;
+
+    IsDead = false;
+    TimeBeforeRemoval = 7.0f;
 }
 
 // Called when the game starts or when spawned
@@ -50,7 +92,14 @@ void AProject1Enemy::BeginPlay()
     Super::BeginPlay();
 
     TargetMovementLocation = GetActorLocation();
-    AnimInstance = Cast<UEnemyAnimInstance>(GetMesh()->GetAnimInstance());
+
+    AnimInstance = Cast<UEnemyAnimInstance>(SkeletalMesh->GetAnimInstance());
+    if (!AnimInstance) {
+        UE_LOG(LogTemp, Error, TEXT("Failed to Load AnimInstance"));
+    }
+    else {
+        UE_LOG(LogTemp, Log, TEXT("AnimInstance Loaded Successfully"));
+    }
 
     if (EnemyHPBarWidgetClass)
     {
@@ -108,173 +157,214 @@ void AProject1Enemy::UpdateUIPosition()
 // Called every frame
 void AProject1Enemy::Tick(float DeltaTime)
 {
-    Super::Tick(DeltaTime);
-    AProject1Character* PlayerCharacter = Cast<AProject1Character>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
-    APlayerController* PlayerController = Cast<APlayerController>(PlayerCharacter->GetController());
-    AProject1GameMode* Project1GameMode = GetWorld()->GetAuthGameMode<AProject1GameMode>();
+    if (!IsDead) {
+        Super::Tick(DeltaTime);
+        AProject1Character* PlayerCharacter = Cast<AProject1Character>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+        APlayerController* PlayerController = Cast<APlayerController>(PlayerCharacter->GetController());
+        AProject1GameMode* Project1GameMode = GetWorld()->GetAuthGameMode<AProject1GameMode>();
 
-    WorldStatus currentWorldStatus = Project1GameMode->CurrentWorldStatus;
+        WorldStatus currentWorldStatus = Project1GameMode->CurrentWorldStatus;
 
-    if (PlayerCharacter) {
-        
-        // 안전 상황일 때는 눈에 보여야 추적
-        if (currentWorldStatus == WorldStatus::Safe) {
-            PlayerChase_PlayerCrouch();
+        if (PlayerCharacter) {
 
-            float DistanceToPlayer = FVector::Dist(GetActorLocation(), PlayerCharacter->GetActorLocation());
-
-            // 인식 범위 안에 있는지 확인
-            if (DistanceToPlayer <= RecognitionRadius)
-            {
-                // UE_LOG(LogTemp, Error, TEXT("Caution 변화 준비중"));
-                // IncreaseRecognitionGauge();
-            }
-            else
-            {
-                // 인식 범위 밖에 있을 때의 처리
-            }
-
-        }
-
-        // 경고 상황일 때는 눈에 보이거나, 가까이 접근하면 추적
-        else if (currentWorldStatus == WorldStatus::Caution) {
-            if (PlayerCharacter->bIsCrouching) {
+            // 안전 상황일 때는 눈에 보여야 추적
+            if (currentWorldStatus == WorldStatus::Safe) {
                 PlayerChase_PlayerCrouch();
-            }
-            else if (!PlayerCharacter->bIsCrouching) { PlayerChase_PlayerNOTCrouch(500.0f); }
-        }
 
-        // 위험 상황 : 좀비들이 거리를 무시하고 플레이어를 추격.
-        else if (currentWorldStatus == WorldStatus::Warning) {
-            if (PlayerCharacter) {
-                float DistanceToPlayer = FVector::Distance(PlayerCharacter->GetActorLocation(), GetActorLocation());
+                float DistanceToPlayer = FVector::Dist(GetActorLocation(), PlayerCharacter->GetActorLocation());
 
-                FVector PlayerLocation = PlayerCharacter->GetActorLocation();
-                FVector EnemyLocation = GetActorLocation();
-
-                FVector DirectionToPlayer = PlayerLocation - EnemyLocation;
-
-                FRotator LookAtRotation = FRotationMatrix::MakeFromX(DirectionToPlayer).Rotator();
-                SetActorRotation(FRotator(0.0f, LookAtRotation.Yaw, 0.0f)); // 좌우 회전만 고려하여 설정
-
-
-                if (AnimInstance)
+                // 인식 범위 안에 있는지 확인
+                if (DistanceToPlayer <= RecognitionRadius)
                 {
-                    AnimInstance->IsMoving = true; // 이동 중임을 설정
+                    // UE_LOG(LogTemp, Error, TEXT("Caution 변화 준비중"));
+                    // IncreaseRecognitionGauge();
+                }
+                else
+                {
+                    // 인식 범위 밖에 있을 때의 처리
                 }
 
-                if (!IsScreaming)
-                {
-                    // Play the animation montage
-                    PlayScreamAnimation();
-                    IsScreaming = true;
-                }
-
-                if (!isRecognizingPlayer)
-                {
-                    Project1GameMode->SetAlertGuage(2.0f);
-                    isRecognizingPlayer = true;
-                    UE_LOG(LogTemp, Error, TEXT("플레이어 추적 개시"));
-                }
-
-                MoveToTarget(PlayerLocation);
             }
 
-
-        }
-
-        float DistanceToPlayer = FVector::Distance(PlayerCharacter->GetActorLocation(), GetActorLocation());
-    }
-
-    // 구 Tick() 플레이어 추적 레거시 코드
-    /*
-    
-    if (PlayerCharacter) {
-        // 플레이어가 Crouching 중인지 체크
-        if (PlayerCharacter->bIsCrouching && Project1GameMode->CurrentWorldStatus != WorldStatus::Warning) {
-
-            // 플레이어가 시야에 있는지 판정
-            if (CanSeePlayer())
-            {
-                // 추격 시작
-                IsChasing = true;
-                FVector PlayerLocation = PlayerCharacter->GetActorLocation();
-                MoveToTarget(PlayerLocation);
-
-                // 플레이어 방향으로 회전
-                FRotator LookAtRotation = (PlayerLocation - GetActorLocation()).Rotation();
-                SetActorRotation(FRotator(0.0f, LookAtRotation.Yaw, 0.0f)); // Only rotate on Yaw axis
-
-                // 애니메이션 체크
-                if (AnimInstance)
-                {
-                    AnimInstance->IsMoving = true; // Set moving state
+            // 경고 상황일 때는 눈에 보이거나, 가까이 접근하면 추적
+            else if (currentWorldStatus == WorldStatus::Caution) {
+                if (PlayerCharacter->bIsCrouching) {
+                    PlayerChase_PlayerCrouch();
                 }
-                if (!IsScreaming)
-                {
-                    PlayScreamAnimation();
-                    IsScreaming = true;
-                }
+                else if (!PlayerCharacter->bIsCrouching) { PlayerChase_PlayerNOTCrouch(500.0f); }
             }
-            else
-            {
-                IsChasing = false;
-                if (AnimInstance) { AnimInstance->IsMoving = false; }
-                IsScreaming = false;
-            }
-        }
 
-        // 숙이지 않고 있는 경우
+            // 위험 상황 : 좀비들이 거리를 무시하고 플레이어를 추격.
+            else if (currentWorldStatus == WorldStatus::Warning) {
+                if (PlayerCharacter) {
+                    float DistanceToPlayer = FVector::Distance(PlayerCharacter->GetActorLocation(), GetActorLocation());
 
-        else if (PlayerCharacter->bIsCrouching == false) {
-            
-            // 플레이어 거리 판정
-            float DistanceToPlayer = FVector::Distance(PlayerCharacter->GetActorLocation(), GetActorLocation());
+                    FVector PlayerLocation = PlayerCharacter->GetActorLocation();
+                    FVector EnemyLocation = GetActorLocation();
 
-            if (DistanceToPlayer < RecogDistance)
-            {
-                // Draw the vision cone
-                // DrawVisionCone();
+                    FVector DirectionToPlayer = PlayerLocation - EnemyLocation;
 
-                FVector PlayerLocation = PlayerCharacter->GetActorLocation();
-                FVector EnemyLocation = GetActorLocation();
-
-                FVector DirectionToPlayer = PlayerLocation - EnemyLocation;
-
-                if (DirectionToPlayer.Size() <= RecogDistance)
-                {
                     FRotator LookAtRotation = FRotationMatrix::MakeFromX(DirectionToPlayer).Rotator();
                     SetActorRotation(FRotator(0.0f, LookAtRotation.Yaw, 0.0f)); // 좌우 회전만 고려하여 설정
+
+
                     if (AnimInstance)
                     {
                         AnimInstance->IsMoving = true; // 이동 중임을 설정
                     }
 
-                    if (!IsScreaming) 
+                    if (!IsScreaming)
                     {
                         // Play the animation montage
                         PlayScreamAnimation();
                         IsScreaming = true;
                     }
 
-                    if (PlayerController && !isRecognizingPlayer)
+                    if (!isRecognizingPlayer)
                     {
-                        isRecognizingPlayer = true;
-                        UE_LOG(LogTemp, Error, TEXT("플레이어 추적 시작"));
-
-                        
                         Project1GameMode->SetAlertGuage(2.0f);
+                        isRecognizingPlayer = true;
+                        UE_LOG(LogTemp, Error, TEXT("플레이어 추적 개시"));
                     }
 
                     MoveToTarget(PlayerLocation);
                 }
+
+
+            }
+
+            float DistanceToPlayer = FVector::Distance(PlayerCharacter->GetActorLocation(), GetActorLocation());
+        }
+
+        // 구 Tick() 플레이어 추적 레거시 코드
+        /*
+
+        if (PlayerCharacter) {
+            // 플레이어가 Crouching 중인지 체크
+            if (PlayerCharacter->bIsCrouching && Project1GameMode->CurrentWorldStatus != WorldStatus::Warning) {
+
+                // 플레이어가 시야에 있는지 판정
+                if (CanSeePlayer())
+                {
+                    // 추격 시작
+                    IsChasing = true;
+                    FVector PlayerLocation = PlayerCharacter->GetActorLocation();
+                    MoveToTarget(PlayerLocation);
+
+                    // 플레이어 방향으로 회전
+                    FRotator LookAtRotation = (PlayerLocation - GetActorLocation()).Rotation();
+                    SetActorRotation(FRotator(0.0f, LookAtRotation.Yaw, 0.0f)); // Only rotate on Yaw axis
+
+                    // 애니메이션 체크
+                    if (AnimInstance)
+                    {
+                        AnimInstance->IsMoving = true; // Set moving state
+                    }
+                    if (!IsScreaming)
+                    {
+                        PlayScreamAnimation();
+                        IsScreaming = true;
+                    }
+                }
+                else
+                {
+                    IsChasing = false;
+                    if (AnimInstance) { AnimInstance->IsMoving = false; }
+                    IsScreaming = false;
+                }
+            }
+
+            // 숙이지 않고 있는 경우
+
+            else if (PlayerCharacter->bIsCrouching == false) {
+
+                // 플레이어 거리 판정
+                float DistanceToPlayer = FVector::Distance(PlayerCharacter->GetActorLocation(), GetActorLocation());
+
+                if (DistanceToPlayer < RecogDistance)
+                {
+                    // Draw the vision cone
+                    // DrawVisionCone();
+
+                    FVector PlayerLocation = PlayerCharacter->GetActorLocation();
+                    FVector EnemyLocation = GetActorLocation();
+
+                    FVector DirectionToPlayer = PlayerLocation - EnemyLocation;
+
+                    if (DirectionToPlayer.Size() <= RecogDistance)
+                    {
+                        FRotator LookAtRotation = FRotationMatrix::MakeFromX(DirectionToPlayer).Rotator();
+                        SetActorRotation(FRotator(0.0f, LookAtRotation.Yaw, 0.0f)); // 좌우 회전만 고려하여 설정
+                        if (AnimInstance)
+                        {
+                            AnimInstance->IsMoving = true; // 이동 중임을 설정
+                        }
+
+                        if (!IsScreaming)
+                        {
+                            // Play the animation montage
+                            PlayScreamAnimation();
+                            IsScreaming = true;
+                        }
+
+                        if (PlayerController && !isRecognizingPlayer)
+                        {
+                            isRecognizingPlayer = true;
+                            UE_LOG(LogTemp, Error, TEXT("플레이어 추적 시작"));
+
+
+                            Project1GameMode->SetAlertGuage(2.0f);
+                        }
+
+                        MoveToTarget(PlayerLocation);
+                    }
+                }
             }
         }
+        */
+
+        // Update UI position
+        UpdateUIPosition();
     }
-    */
-    
-    // Update UI position
-    UpdateUIPosition();
+}
+
+void AProject1Enemy::AttackPlayer()
+{
+    if (!IsDead) {
+        AProject1Character* PlayerCharacter = Cast<AProject1Character>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+        if (PlayerCharacter)
+        {
+            // 플레이어에게 데미지를 입히는 로직
+            float Damage = 10.0f; // 예시 데미지 값
+            PlayerCharacter->TakeDamage(Damage, FDamageEvent(), GetController(), this);
+            // 필요 시 사운드 재생 등 추가 로직
+        }
+    }
+}
+
+void AProject1Enemy::OnPlayerEnterAttackRange(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+    UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+    if (!IsDead) {
+        AProject1Character* PlayerCharacter = Cast<AProject1Character>(OtherActor);
+        if (PlayerCharacter && AnimInstance)
+        {
+            UE_LOG(LogTemp, Error, TEXT("플레이어 피격"));
+            AttackPlayer();
+            AnimInstance->IsAttacking = true;
+        }
+    }
+}
+
+
+void AProject1Enemy::OnPlayerExitAttackRange(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+    UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+    AProject1Character* PlayerCharacter = Cast<AProject1Character>(OtherActor);
+    if (PlayerCharacter && AnimInstance)
+    {
+        AnimInstance->IsAttacking = false;
+    }
 }
 
 // 플레이어가 시야에 보일 때
@@ -408,16 +498,53 @@ float AProject1Enemy::TakeDamage(float DamageAmount, struct FDamageEvent const& 
     HPProgressBar->SetPercent(Percentage);
 
     // 0일때 Enemy HUD 제거
-    if (EnemyHP <= 0)
+    if (EnemyHP <= 0 && !IsDead)
     {
         if (EnemyHPWidget)
         {
             EnemyHPWidget->SetVisibility(ESlateVisibility::Hidden);
         }
-        Destroy();
+        Die();
     }
 
     return ActualDamage;
+}
+
+void AProject1Enemy::Die()
+{
+    IsDead = true;
+
+    // Enable physics simulation for the skeletal mesh
+    GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
+    GetMesh()->SetAllBodiesSimulatePhysics(true);
+    GetMesh()->WakeAllRigidBodies();
+    GetMesh()->bBlendPhysics = true;
+
+    if (SkeletalMesh)
+    {
+        SkeletalMesh->SetCollisionProfileName(TEXT("Ragdoll"));
+        SkeletalMesh->SetSimulatePhysics(true);
+        SkeletalMesh->WakeAllRigidBodies();
+        UE_LOG(LogTemp, Warning, TEXT("Simulate Physics activated on MeshComponent"));
+    }
+
+    if (RecognitionVolume)
+    {
+        RecognitionVolume->DestroyComponent();
+        RecognitionVolume = nullptr;
+    }
+    // CollisionCylinder->DestroyComponent();
+
+    // Disable the character's movement
+    GetCharacterMovement()->DisableMovement();
+
+    // Set a timer to remove the enemy from the game after a delay
+    GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &AProject1Enemy::OnDeathFinished, TimeBeforeRemoval, false);
+}
+
+void AProject1Enemy::OnDeathFinished()
+{
+    Destroy();
 }
 
 void AProject1Enemy::PlayScreamAnimation()

@@ -55,8 +55,6 @@ void UPlayerHUD::NativeConstruct()
 
 void UPlayerHUD::SetAlertProgressBar(float ParaGuage)
 {
-	UProgressBar* AlertProgressBar = Cast<UProgressBar>(GetWidgetFromName(TEXT("ALERTPROGRESSBAR")));
-
 	if (AlertProgressBar)
 	{
 		AlertProgressBar->SetPercent(ParaGuage);
@@ -66,7 +64,6 @@ void UPlayerHUD::SetAlertProgressBar(float ParaGuage)
 
 void UPlayerHUD::SetRecogProgressBar(float ParaGuage)
 {
-	UProgressBar* RecogProgressBar = Cast<UProgressBar>(GetWidgetFromName(TEXT("RECOGPROGRESSBAR")));
 
 	if (RecogProgressBar) {
 		RecogProgressBar->SetPercent(ParaGuage);
@@ -92,8 +89,6 @@ void UPlayerHUD::SetAlertProgressBarColorWithAlertLevel(int32 Status)
 		ProgressBarColor = FLinearColor::Blue; // Default
 		break;
 	}
-
-	UProgressBar* AlertProgressBar = Cast<UProgressBar>(GetWidgetFromName(TEXT("ALERTPROGRESSBAR")));
 	if (AlertProgressBar)
 	{
 		AlertProgressBar->SetFillColorAndOpacity(ProgressBarColor);
