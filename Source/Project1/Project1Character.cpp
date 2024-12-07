@@ -113,9 +113,11 @@ void AProject1Character::SetupPlayerInputComponent(class UInputComponent* Player
     PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &AProject1Character::Crouching);
     PlayerInputComponent->BindAction("CrouchEnd", IE_Released, this, &AProject1Character::CrouchingEnd);
 
-    PlayerInputComponent->BindAction("Aim", IE_Pressed, this, &AProject1Character::OnRightMouseButtonPressed);
+    // PlayerInputComponent->BindAction("Aim", IE_Pressed, this, &AProject1Character::OnRightMouseButtonPressed);
     PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AProject1Character::OnLeftMouseButtonPressed);
     PlayerInputComponent->BindAction("Fire_out", IE_Released, this, &AProject1Character::OnLeftMouseButtonReleased);
+
+    PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &AProject1Character::Reload);
 }
 
 void AProject1Character::BeginPlay()
@@ -131,7 +133,7 @@ void AProject1Character::BeginPlay()
         UE_LOG(LogTemp, Error, TEXT("Failed to initialize PlayerAnimInstance!"));
     }
 
-    FRotator WeaponRotation = FRotator(0.0f, 90.0f, 0.0f); // 회전하려는 각도를 설정합니다.
+    FRotator WeaponRotation = FRotator(0.0f, 82.0f, 0.0f); // 회전하려는 각도를 설정합니다.
     Weapon->SetRelativeRotation(WeaponRotation); // 무기를 설정한 각도로 회전시킵니다.
 
     // 디버그 출력을 추가하여 무기의 회전 값을 확인합니다.
@@ -214,6 +216,7 @@ void AProject1Character::Fire()
             // 총알을 생성하고 발사합니다.
             Bullets--;
             UpdateAmmoText(Bullets);
+            UE_LOG(LogTemp, Warning, TEXT("Fire"));
 
             FActorSpawnParameters SpawnParams;
             SpawnParams.Owner = this;
@@ -232,13 +235,16 @@ void AProject1Character::Fire()
                     PlayerAnimInstance->SetIsFiring(bIsFiring);
                 }
 
-                AProject1GameMode* GameMode = Cast<AProject1GameMode>(GetWorld()->GetAuthGameMode());
+                // AProject1GameMode* GameMode = Cast<AProject1GameMode>(GetWorld()->GetAuthGameMode());
 
+                /*
                 // 2. 얻은 참조를 통해 GameMode의 함수를 호출하여 WorldStatus를 설정합니다.
                 if (GameMode)
                 {
                     GameMode->SetAlertGuage(1.5f); // 예시로 Alert로 설정
                 }
+                */
+                
 
             }
             else
@@ -251,6 +257,31 @@ void AProject1Character::Fire()
         {
             bIsFiring = false;
         }
+    }
+}
+
+void AProject1Character::StartFiring()
+{
+    Fire();  // 첫 발사
+    GetWorld()->GetTimerManager().SetTimer(FireTimerHandle, this, &AProject1Character::FireRepeatedly, 0.23f, true);
+}
+
+/*
+void AProject1Character::StopFiring()
+{
+    GetWorld()->GetTimerManager().ClearTimer(FireTimerHandle);
+}
+*/
+
+void AProject1Character::FireRepeatedly()
+{
+    if (CanFire && Bullets > 0)
+    {
+        Fire();  // Fire 함수에서 Bullets가 감소합니다.
+    }
+    else
+    {
+        StopFiring();  // 총알이 없으면 타이머 정지
     }
 }
 
@@ -382,6 +413,20 @@ void AProject1Character::SetControlModeTopView()
     }
 }
 
+void AProject1Character::Reload()
+{
+    if (PlayerAnimInstance != nullptr)
+    {
+        PlayerAnimInstance->SetIsReloading(true);
+        Bullets = 60;
+        UpdateAmmoText(60);
+    }
+    else {
+        UE_LOG(LogTemp, Warning, TEXT("PlayerAnimInstance is Null!"));
+
+    }
+}
+
 void AProject1Character::Crouching()
 {
     bIsCrouching = true;
@@ -398,6 +443,7 @@ void AProject1Character::SetIsCrouching(bool isCrouchingSetter) {
     bIsCrouching = isCrouchingSetter;
 }
 
+/*
 void AProject1Character::OnRightMouseButtonPressed()
 {
     if (PlayerAnimInstance != nullptr)
@@ -412,6 +458,8 @@ void AProject1Character::OnRightMouseButtonPressed()
     }
 
 }
+*/
+
 
 void AProject1Character::OnLeftMouseButtonPressed()
 {
@@ -426,7 +474,11 @@ void AProject1Character::OnLeftMouseButtonPressed()
         }
         PlayerAnimInstance->SetIsFiring(bIsFiring);
         // UE_LOG(LogTemp, Warning, TEXT("%d"), GunAnimInstance->IsGunFiring());
-        Fire();      
+        bIsFiring = true;
+        if (CanFire)
+        {
+            StartFiring();
+        }
     }
 }
 
@@ -443,6 +495,9 @@ void AProject1Character::OnLeftMouseButtonReleased()
         PlayerAnimInstance->SetIsFiring(bIsFiring);
 
     }
+
+    bIsFiring = false;
+    StopFiring();
 }
 
 void AProject1Character::PlayRifleFireMontage()
@@ -459,10 +514,11 @@ void AProject1Character::PlayRifleFireMontage()
 
 void AProject1Character::StopFiring()
 {
+    GetWorld()->GetTimerManager().ClearTimer(FireTimerHandle);
     bIsFiring = false;
     if (PlayerAnimInstance != nullptr)
     {
-        PlayerAnimInstance->SetIsFiring(bIsFiring);
+        PlayerAnimInstance->SetIsFiring(false);
     }
 }
 

@@ -101,6 +101,7 @@ protected:
     void MoveRight(float Value);
     void Crouching();
     void CrouchingEnd();
+    void Reload();
 
     UFUNCTION(BlueprintCallable)
     void SetControlModeTPS();
@@ -123,7 +124,7 @@ protected:
     float BaseTurnRate;
     float BaseLookUpRate;
 
-    void OnRightMouseButtonPressed();
+    // void OnRightMouseButtonPressed();
     void OnLeftMouseButtonPressed();
     void OnLeftMouseButtonReleased();
 
@@ -138,5 +139,10 @@ protected:
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Fire")
         class UAnimInstance* RifleAnimInstance;
+
+    // 총기 타이머용
+
+    void StartFiring();
+    void FireRepeatedly();
 
 };
