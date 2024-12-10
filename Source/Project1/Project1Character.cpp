@@ -90,6 +90,7 @@ AProject1Character::AProject1Character()
 
 void AProject1Character::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
 {
+
     // Set up gameplay key bindings
     PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
     PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
@@ -159,7 +160,8 @@ void AProject1Character::BeginPlay()
         }
     }
 
-    SetControlMode(0);
+    SetControlMode(1);
+    UpdateAmmoText(Bullets);
 }
 
 void AProject1Character::ChangeMovementSpeed(float NewSpeed)
@@ -238,10 +240,10 @@ void AProject1Character::Fire()
                 // AProject1GameMode* GameMode = Cast<AProject1GameMode>(GetWorld()->GetAuthGameMode());
 
                 /*
-                // 2. 얻은 참조를 통해 GameMode의 함수를 호출하여 WorldStatus를 설정합니다.
+
                 if (GameMode)
                 {
-                    GameMode->SetAlertGuage(1.5f); // 예시로 Alert로 설정
+                    GameMode->SetAlertGuage(1.5f); 
                 }
                 */
                 
@@ -277,11 +279,15 @@ void AProject1Character::FireRepeatedly()
 {
     if (CanFire && Bullets > 0)
     {
-        Fire();  // Fire 함수에서 Bullets가 감소합니다.
+        Fire();  
     }
-    else
+    else // 여기서는 총알 소진 후 처리
     {
-        StopFiring();  // 총알이 없으면 타이머 정지
+        if (GunAnimInstance)
+        {
+            GunAnimInstance->SetGunIsFiring(false); 
+        }
+        StopFiring();  
     }
 }
 
@@ -420,6 +426,7 @@ void AProject1Character::Reload()
         PlayerAnimInstance->SetIsReloading(true);
         Bullets = 60;
         UpdateAmmoText(60);
+        ReloadManager();
     }
     else {
         UE_LOG(LogTemp, Warning, TEXT("PlayerAnimInstance is Null!"));
@@ -470,7 +477,7 @@ void AProject1Character::OnLeftMouseButtonPressed()
     {
         if (GunAnimInstance)
         {
-            GunAnimInstance->SetGunIsFiring(true); // 예시로 true를 설정합니다.
+            GunAnimInstance->SetGunIsFiring(true); // 총기 애니메이션
         }
         PlayerAnimInstance->SetIsFiring(bIsFiring);
         // UE_LOG(LogTemp, Warning, TEXT("%d"), GunAnimInstance->IsGunFiring());
