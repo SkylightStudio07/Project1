@@ -78,9 +78,16 @@ AProject1Character::AProject1Character()
     }
     RifleAnimInstance = Cast<UAnimInstance>(AnimBP_ClassFinder.Class->GetDefaultObject());
 
+    WeaponCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("WeaponCamera"));
+    WeaponCamera->SetupAttachment(Weapon);
+    WeaponCamera->SetRelativeLocation(FVector(-10.0f, 10.0f, 30.0f));
+    WeaponCamera->bUsePawnControlRotation = true;
+    WeaponCamera->Deactivate();  // 기본적으로 비활성화
+
     Bullets = 60;
     CanFire = true;
     bIsCrouching = false;
+    ControlMode = 1;
 
 
     MaxWalkSpeed = 600.0f;
@@ -115,6 +122,8 @@ void AProject1Character::SetupPlayerInputComponent(class UInputComponent* Player
     PlayerInputComponent->BindAction("CrouchEnd", IE_Released, this, &AProject1Character::CrouchingEnd);
 
     // PlayerInputComponent->BindAction("Aim", IE_Pressed, this, &AProject1Character::OnRightMouseButtonPressed);
+    PlayerInputComponent->BindAction("Aim", IE_Pressed, this, &AProject1Character::OnRightMouseButtonPressed);
+    PlayerInputComponent->BindAction("Aim", IE_Released, this, &AProject1Character::OnRightMouseButtonReleased);
     PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AProject1Character::OnLeftMouseButtonPressed);
     PlayerInputComponent->BindAction("Fire_out", IE_Released, this, &AProject1Character::OnLeftMouseButtonReleased);
 
@@ -160,8 +169,15 @@ void AProject1Character::BeginPlay()
         }
     }
 
-    SetControlMode(1);
+    // SetControlMode(1);
+
     UpdateAmmoText(Bullets);
+}
+
+void AProject1Character::PostInitializeComponents()
+{
+    Super::PostInitializeComponents();
+    SetControlMode(ControlMode); // 카메라 설정 함수 호출
 }
 
 void AProject1Character::ChangeMovementSpeed(float NewSpeed)
@@ -194,8 +210,6 @@ float AProject1Character::TakeDamage(float DamageAmount, FDamageEvent const& Dam
 
         if (PlayerHP <= 0.0f)
         {
-            // Handle player death, such as playing death animation, game over screen, etc.
-            // For now, just destroy the actor
             Destroy();
         }
     }
@@ -224,17 +238,32 @@ void AProject1Character::Fire()
             SpawnParams.Owner = this;
             SpawnParams.Instigator = GetInstigator();
             AProject1Projectile* Projectile = GetWorld()->SpawnActor<AProject1Projectile>(ProjectileClass, MuzzleLocation, MuzzleDirection.Rotation(), SpawnParams);
-            bIsFiring = true;
+            
 
             if (Projectile)
             {
                 // 총알 투사체 발사
                 Projectile->FireInDirection(MuzzleDirection);
 
-                // 총알 발사 시 애니메이션 상태 변경
-                if (PlayerAnimInstance != nullptr)
-                {
-                    PlayerAnimInstance->SetIsFiring(bIsFiring);
+                // FPS에만 처리
+                if (ControlMode == 1 || bIsAiming == true) {
+                    // 총알 발사 시 애니메이션 상태 변경
+                    bIsFiring = true;
+                    if (PlayerAnimInstance != nullptr)
+                    {
+                        PlayerAnimInstance->SetIsFiring(bIsFiring);
+                    }
+                }
+                else if (ControlMode == 0) {
+                    // 총알 발사 시 애니메이션 상태 변경
+                    bIsFiring = false;
+                    if (PlayerAnimInstance != nullptr)
+                    {
+                        PlayerAnimInstance->SetIsFiring(bIsFiring);
+                    }
+                }
+                else {
+                    bIsFiring = false;
                 }
 
                 // AProject1GameMode* GameMode = Cast<AProject1GameMode>(GetWorld()->GetAuthGameMode());
@@ -343,11 +372,12 @@ void AProject1Character::MoveRight(float Value)
 	}
 }
 
-void AProject1Character::SetControlMode(int32 ControlMode)
+void AProject1Character::SetControlMode(int32 controlMode)
 {
-    if (ControlMode == 0) // TPS
+    ControlMode = controlMode;
+    if (controlMode == 0) // TPS
     {
-        CameraBoom->TargetArmLength = 450.0f;
+        CameraBoom->TargetArmLength = 150.0f;
         CameraBoom->SetRelativeRotation(FRotator::ZeroRotator);
         CameraBoom->bUsePawnControlRotation = true;
         CameraBoom->bInheritPitch = true;
@@ -360,7 +390,7 @@ void AProject1Character::SetControlMode(int32 ControlMode)
         bUseControllerRotationRoll = true;
         GetCharacterMovement()->bOrientRotationToMovement = false;
     }
-    else if (ControlMode == 1) // FPS
+    else if (controlMode == 1) // FPS
     {
         CameraBoom->TargetArmLength = 0.0f;
         CameraBoom->SetRelativeRotation(FRotator::ZeroRotator);
@@ -369,9 +399,13 @@ void AProject1Character::SetControlMode(int32 ControlMode)
         CameraBoom->bInheritRoll = true;
         CameraBoom->bInheritYaw = true;
         CameraBoom->bDoCollisionTest = true;
+
         bUseControllerRotationYaw = false;
+        bUseControllerRotationPitch = true;
+        bUseControllerRotationRoll = true;
+        GetCharacterMovement()->bOrientRotationToMovement = false;
     }
-    else if (ControlMode == 2) // Top View
+    else if (controlMode == 2) // Top View
     {
         CameraBoom->TargetArmLength = 800.0f;
         CameraBoom->SetRelativeRotation(FRotator(-60.0f, 0.0f, 0.0f));
@@ -448,6 +482,22 @@ void AProject1Character::CrouchingEnd()
 
 void AProject1Character::SetIsCrouching(bool isCrouchingSetter) {
     bIsCrouching = isCrouchingSetter;
+}
+
+void AProject1Character::OnRightMouseButtonPressed()
+{
+    bIsAiming = true;
+    FollowCamera->Deactivate();
+    WeaponCamera->Activate();
+    WeaponCamera->SetFieldOfView(40.0f);  // 조준 시 좁은 시야
+}
+
+void AProject1Character::OnRightMouseButtonReleased()
+{
+    bIsAiming = false;
+    WeaponCamera->Deactivate();
+    FollowCamera->Activate();
+    FollowCamera->SetFieldOfView(90.0f);  // 기본 시야
 }
 
 /*
