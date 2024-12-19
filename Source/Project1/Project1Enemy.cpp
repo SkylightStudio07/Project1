@@ -3,6 +3,7 @@
 #include "EnemyAnimInstance.h"
 #include "Kismet/GameplayStatics.h"
 #include "DrawDebugHelpers.h"
+#include "Project1EnemyAIController.h"
 #include "TimerManager.h"
 #include "Components/WidgetComponent.h"
 #include "EnemyHPWidget.h"
@@ -28,7 +29,7 @@ AProject1Enemy::AProject1Enemy()
     isRecognizingPlayer = false;
 
     // RootComponent 설정
-    RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
+    RootComponent = CreateDefaultSubobject<UCapsuleComponent>(TEXT("RootComponent"));
 
     // 스켈레탈 메쉬
     SkeletalMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SkeletalMesh"));
@@ -58,13 +59,20 @@ AProject1Enemy::AProject1Enemy()
     RecognitionVolume = CreateDefaultSubobject<USphereComponent>(TEXT("RecognitionVolume"));
     if (RecognitionVolume)
     {
+        UE_LOG(LogTemp, Warning, TEXT("RecognitionVolume successfully created."));
         RecognitionVolume->InitSphereRadius(RecognitionRadius);
         RecognitionVolume->SetCollisionProfileName(TEXT("Trigger")); // 콜리전 프로파일 설정
 
         RecognitionVolume->SetupAttachment(RootComponent);
         RecognitionVolume->OnComponentBeginOverlap.AddDynamic(this, &AProject1Enemy::OnPlayerEnterRecognitionVolume);
         RecognitionVolume->OnComponentEndOverlap.AddDynamic(this, &AProject1Enemy::OnPlayerExitRecognitionVolume);
+        RecognitionRadius = 300.0f;
     }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("RecognitionVolume is NULL."));
+    }
+    
 
     AttackRange = CreateDefaultSubobject<USphereComponent>(TEXT("AttackRange"));
     if (AttackRange)
@@ -80,12 +88,18 @@ AProject1Enemy::AProject1Enemy()
 
     IsDead = false;
     TimeBeforeRemoval = 7.0f;
+
+    AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
+    AIControllerClass = AProject1EnemyAIController::StaticClass();
+
 }
 
 // Called when the game starts or when spawned
 void AProject1Enemy::BeginPlay()
 {
+    UE_LOG(LogTemp, Warning, TEXT("Before Super::BeginPlay"));
     Super::BeginPlay();
+    UE_LOG(LogTemp, Warning, TEXT("After Super::BeginPlay"));
 
     TargetMovementLocation = GetActorLocation();
 
@@ -122,7 +136,14 @@ void AProject1Enemy::BeginPlay()
         UE_LOG(LogTemp, Error, TEXT("EnemyHPBarWidgetClass is nullptr"));
     }
 
-
+    if (RecognitionVolume)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("RecognitionVolume exists at BeginPlay."));
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("RecognitionVolume is NULL at BeginPlay."));
+    }
 
 }
 
@@ -161,6 +182,7 @@ void AProject1Enemy::Tick(float DeltaTime)
 
         WorldStatus currentWorldStatus = Project1GameMode->CurrentWorldStatus;
 
+        /*
         if (PlayerCharacter) {
 
             // 안전 상황일 때는 눈에 보여야 추적
@@ -179,10 +201,8 @@ void AProject1Enemy::Tick(float DeltaTime)
                 {
                     // 인식 범위 밖에 있을 때의 처리
                 }
-
             }
 
-            // 경고 상황일 때는 눈에 보이거나, 가까이 접근하면 추적
             else if (currentWorldStatus == WorldStatus::Caution) {
                 if (PlayerCharacter->bIsCrouching) {
                     PlayerChase_PlayerCrouch();
@@ -223,7 +243,7 @@ void AProject1Enemy::Tick(float DeltaTime)
                         UE_LOG(LogTemp, Error, TEXT("플레이어 추적 개시"));
                     }
 
-                    MoveToTarget(PlayerLocation);
+                    // MoveToTarget(PlayerLocation);
                 }
 
 
@@ -381,7 +401,7 @@ void AProject1Enemy::PlayerChase_PlayerCrouch() {
             // 추격 시작
             IsChasing = true;
             FVector PlayerLocation = PlayerCharacter->GetActorLocation();
-            MoveToTarget(PlayerLocation);
+            // MoveToTarget(PlayerLocation);
 
             // 플레이어 방향으로 회전
             FRotator LookAtRotation = (PlayerLocation - GetActorLocation()).Rotation();
@@ -458,7 +478,7 @@ void AProject1Enemy::PlayerChase_PlayerNOTCrouch(float RecogDistance)
                     UE_LOG(LogTemp, Error, TEXT("플레이어 추적 개시"));
                 }
 
-                MoveToTarget(PlayerLocation);
+                // MoveToTarget(PlayerLocation);
             }
         }
 
@@ -470,7 +490,7 @@ void AProject1Enemy::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 {
     Super::SetupPlayerInputComponent(PlayerInputComponent);
 }
-
+/*
 void AProject1Enemy::MoveToTarget(const FVector& InTargetLocation)
 {
 
@@ -481,6 +501,7 @@ void AProject1Enemy::MoveToTarget(const FVector& InTargetLocation)
 
     TargetMovementLocation = InTargetLocation;
 }
+*/
 
 float AProject1Enemy::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser)
 {

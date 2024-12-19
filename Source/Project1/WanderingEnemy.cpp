@@ -32,7 +32,7 @@ void AWanderingEnemy::Tick(float DeltaTime)
         SetActorRotation(NewRotation);
 
         // Move towards the target location
-        MoveToTarget(TargetLocation);
+        // MoveToTarget(TargetLocation);
 
         if (AnimInstance)
         {
