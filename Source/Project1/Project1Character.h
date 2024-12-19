@@ -38,6 +38,12 @@ public:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Fire")
         class UAnimMontage* RifleFireMontage;
 
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
+        UCameraComponent* WeaponCamera;
+
+    // 조준 상태 변수
+    bool bIsAiming;
+
     void StopFiring();
     void UpdateAmmoText(int32 RemainingAmmo);
     void ReloadManager();
@@ -77,6 +83,8 @@ public:
 protected:
     virtual void BeginPlay() override;
 
+    virtual void PostInitializeComponents() override;
+
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player")
@@ -101,6 +109,10 @@ protected:
     void MoveRight(float Value);
     void Crouching();
     void CrouchingEnd();
+    void Reload();
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+    int ControlMode;
 
     UFUNCTION(BlueprintCallable)
     void SetControlModeTPS();
@@ -124,6 +136,7 @@ protected:
     float BaseLookUpRate;
 
     void OnRightMouseButtonPressed();
+    void OnRightMouseButtonReleased();
     void OnLeftMouseButtonPressed();
     void OnLeftMouseButtonReleased();
 
@@ -138,5 +151,10 @@ protected:
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Fire")
         class UAnimInstance* RifleAnimInstance;
+
+    // 총기 타이머용
+
+    void StartFiring();
+    void FireRepeatedly();
 
 };
