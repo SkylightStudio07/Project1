@@ -56,6 +56,7 @@ AProject1Enemy::AProject1Enemy()
     if (ZombieScreamMontageAsset.Succeeded()) { ZombieScreamMontage = ZombieScreamMontageAsset.Object; }
     else { UE_LOG(LogTemp, Error, TEXT("Failed to load ZombieScreamMontage!")); }
 
+    /*
     RecognitionVolume = CreateDefaultSubobject<USphereComponent>(TEXT("RecognitionVolume"));
     if (RecognitionVolume)
     {
@@ -72,6 +73,7 @@ AProject1Enemy::AProject1Enemy()
     {
         UE_LOG(LogTemp, Error, TEXT("RecognitionVolume is NULL."));
     }
+    */
     
 
     AttackRange = CreateDefaultSubobject<USphereComponent>(TEXT("AttackRange"));
@@ -136,14 +138,6 @@ void AProject1Enemy::BeginPlay()
         UE_LOG(LogTemp, Error, TEXT("EnemyHPBarWidgetClass is nullptr"));
     }
 
-    if (RecognitionVolume)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("RecognitionVolume exists at BeginPlay."));
-    }
-    else
-    {
-        UE_LOG(LogTemp, Error, TEXT("RecognitionVolume is NULL at BeginPlay."));
-    }
 
 }
 
@@ -176,11 +170,6 @@ void AProject1Enemy::Tick(float DeltaTime)
 {
     if (!IsDead) {
         Super::Tick(DeltaTime);
-        AProject1Character* PlayerCharacter = Cast<AProject1Character>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
-        APlayerController* PlayerController = Cast<APlayerController>(PlayerCharacter->GetController());
-        AProject1GameMode* Project1GameMode = GetWorld()->GetAuthGameMode<AProject1GameMode>();
-
-        WorldStatus currentWorldStatus = Project1GameMode->CurrentWorldStatus;
 
         /*
         if (PlayerCharacter) {
@@ -544,16 +533,19 @@ void AProject1Enemy::Die()
         SkeletalMesh->WakeAllRigidBodies();
         UE_LOG(LogTemp, Warning, TEXT("Simulate Physics activated on MeshComponent"));
     }
-
+    
+    /*
     if (RecognitionVolume)
     {
         RecognitionVolume->DestroyComponent();
         RecognitionVolume = nullptr;
     }
+    */
     // CollisionCylinder->DestroyComponent();
 
-    // Disable the character's movement
-    GetCharacterMovement()->DisableMovement();
+    GetCharacterMovement()->MaxWalkSpeed = 300.0f;  // AI 이동 속도 설정
+    GetCharacterMovement()->bOrientRotationToMovement = true;  // 이동 방향으로 회전
+    GetCharacterMovement()->bUseControllerDesiredRotation = true;  // AIController가 회전을 제어
 
     // Set a timer to remove the enemy from the game after a delay
     GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &AProject1Enemy::OnDeathFinished, TimeBeforeRemoval, false);
@@ -627,6 +619,7 @@ void AProject1Enemy::OnPlayerEnterRecognitionVolume(UPrimitiveComponent* Overlap
 }
 */
 
+/*
 void AProject1Enemy::OnPlayerEnterRecognitionVolume(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
     UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {

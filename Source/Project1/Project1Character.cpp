@@ -11,6 +11,7 @@
 #include "GunAnimInstance.h"
 #include "Project1Projectile.h"
 #include "PlayerHUD.h"
+#include "NavigationSystem.h"
 #include "Project1GameMode.h"
 #include "Engine/SkeletalMesh.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -172,6 +173,12 @@ void AProject1Character::BeginPlay()
     // SetControlMode(1);
 
     UpdateAmmoText(Bullets);
+
+    if (GetCapsuleComponent())
+    {
+        FNavigationSystem::UpdateComponentData(*GetCapsuleComponent());
+        UE_LOG(LogTemp, Warning, TEXT("Player collision data updated on NavMesh."));
+    }
 }
 
 void AProject1Character::PostInitializeComponents()

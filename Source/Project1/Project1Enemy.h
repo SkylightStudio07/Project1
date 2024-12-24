@@ -63,9 +63,12 @@ public:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Recognition")
         float RecognitionRadius;
 
+    /*
     UFUNCTION(BlueprintCallable, Category = "Recognition")
     void IncreaseRecognitionGauge();
+    */
 
+    /*
     UFUNCTION(BlueprintCallable, Category = "Recognition")
     void OnPlayerEnterRecognitionVolume(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
         UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
@@ -74,6 +77,8 @@ public:
     UFUNCTION()
         void OnPlayerExitRecognitionVolume(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
             UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+          */
+            
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Attack")
         class USphereComponent* AttackRange;
@@ -95,10 +100,10 @@ protected:
     virtual void BeginPlay() override;
     
     // 게이지 증가 타이머를 시작하는 함수
-    void StartRecognitionGaugeIncrease();
+    // void StartRecognitionGaugeIncrease();
 
     // 게이지 증가 타이머를 멈추는 함수
-    void StopRecognitionGaugeIncrease();
+    // void StopRecognitionGaugeIncrease();
 
     // 게이지를 시간에 따라 증가시키는 함수
     // void IncreaseGaugeOverTime();
@@ -126,7 +131,7 @@ public:
     // Called to bind functionality to input
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-    void MoveToTarget(const FVector& TargetLocation);
+    // void MoveToTarget(const FVector& TargetLocation);
 
     // Function to handle enemy taking damage
     virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
