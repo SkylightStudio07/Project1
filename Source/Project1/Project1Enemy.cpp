@@ -29,27 +29,21 @@ AProject1Enemy::AProject1Enemy()
     isRecognizingPlayer = false;
 
     // RootComponent 설정
-    RootComponent = CreateDefaultSubobject<UCapsuleComponent>(TEXT("RootComponent"));
-
-    // 스켈레탈 메쉬
     SkeletalMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SkeletalMesh"));
     SkeletalMesh->SetupAttachment(RootComponent);
     SkeletalMesh->SetCollisionProfileName(TEXT("CharacterMesh"));
 
     // 애니메이션 블루프린트
     static ConstructorHelpers::FObjectFinder<USkeletalMesh> SkeletalMeshAsset(TEXT("/Game/Enemies/Ch10_nonPBR.Ch10_nonPBR"));
-    if (SkeletalMeshAsset.Succeeded())
-    {
-        SkeletalMesh->SetSkeletalMesh(SkeletalMeshAsset.Object);
+    SkeletalMesh->SetSkeletalMesh(SkeletalMeshAsset.Object);
 
-        static ConstructorHelpers::FClassFinder<UEnemyAnimInstance> AnimBPClass(TEXT("/Game/Enemies/DefaultAnimBlueprint.DefaultAnimBlueprint_C"));
-        if (AnimBPClass.Succeeded())
-        {
-            SkeletalMesh->SetAnimInstanceClass(AnimBPClass.Class);
-        }
-        else {
-            UE_LOG(LogTemp, Error, TEXT("Failed to Load AnimInstance in CS"));
-        }
+    static ConstructorHelpers::FClassFinder<UEnemyAnimInstance> AnimBPClass(TEXT("/Game/Enemies/DefaultAnimBlueprint.DefaultAnimBlueprint_C"));
+    if (AnimBPClass.Succeeded())
+    {
+        SkeletalMesh->SetAnimInstanceClass(AnimBPClass.Class);
+    }
+    else {
+        UE_LOG(LogTemp, Error, TEXT("Failed to Load AnimInstance in CS"));
     }
 
     static ConstructorHelpers::FObjectFinder<UAnimMontage> ZombieScreamMontageAsset(TEXT("/Game/Enemies/ZombieScreamMontage.ZombieScreamMontage"));
@@ -475,10 +469,6 @@ void AProject1Enemy::PlayerChase_PlayerNOTCrouch(float RecogDistance)
     }
 }
 
-void AProject1Enemy::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-    Super::SetupPlayerInputComponent(PlayerInputComponent);
-}
 /*
 void AProject1Enemy::MoveToTarget(const FVector& InTargetLocation)
 {

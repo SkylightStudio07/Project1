@@ -2,6 +2,7 @@
 
 #include "Project1Projectile.h"
 #include "Project1Enemy.h"
+#include "Project1BasicEnemy.h"
 #include "Components/SphereComponent.h"
 
 // Sets default values
@@ -63,12 +64,11 @@ void AProject1Projectile::OnHit(UPrimitiveComponent* HitComponent, AActor* Other
     FString OtherActorName = OtherActor ? OtherActor->GetName() : FString(TEXT("Unknown"));
 
     // Log the name of the other actor
-    UE_LOG(LogTemp, Warning, TEXT("Projectile has hit an enemy: %s"), *OtherActorName);
     if (OtherActor != this)
     {
-        UE_LOG(LogTemp, Warning, TEXT("Best!"));
-        AProject1Enemy* Enemy = Cast<AProject1Enemy>(OtherActor);
-        // Apply damage to the enemy
+        UE_LOG(LogTemp, Warning, TEXT("Projectile has hit an enemy: %s"), *OtherActorName);
+        // AProject1Enemy* Enemy = Cast<AProject1Enemy>(OtherActor); 적 클래스 로드.
+        AProject1BasicEnemy* Enemy = Cast<AProject1BasicEnemy>(OtherActor);
         if (Enemy) {
             Enemy->TakeDamage(DamageAmount, FDamageEvent(), GetInstigatorController(), this);
         }

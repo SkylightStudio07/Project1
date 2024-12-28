@@ -33,4 +33,27 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy")
 		float EnemyHP;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+		USkeletalMeshComponent* SkeletalMesh;
+
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
+		class AController* EventInstigator, AActor* DamageCauser) override;
+
+	void Die();
+
+	void OnDeathFinished();
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Enemy")
+		bool IsDead;
+
+	UPROPERTY(EditAnywhere, Category = "Enemy")
+		float TimeBeforeRemoval;
+
+	float MaxHP;
+
+	FTimerHandle TimerHandle;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Enemy")
+		UCapsuleComponent* BulletCollisionCapsule;
+
 };
