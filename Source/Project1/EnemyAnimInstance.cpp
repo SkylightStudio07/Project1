@@ -3,6 +3,7 @@
 
 #include "EnemyAnimInstance.h"
 #include "Project1Enemy.h"
+#include "Project1BasicEnemy.h"
 
 UEnemyAnimInstance::UEnemyAnimInstance()
 {
@@ -15,7 +16,7 @@ void UEnemyAnimInstance::NativeInitializeAnimation()
     OwningPawn = TryGetPawnOwner();
     if (OwningPawn)
     {
-        OwningEnemy = Cast<AProject1Enemy>(OwningPawn);
+        OwningEnemy = Cast<AProject1BasicEnemy>(OwningPawn);
     }
 }
 

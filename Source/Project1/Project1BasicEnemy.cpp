@@ -20,6 +20,7 @@ AProject1BasicEnemy::AProject1BasicEnemy()
 
     IsDead = false;
     EnemyHP = 200;
+    TimeBeforeRemoval = 5.0f;
 
     PrimaryActorTick.bCanEverTick = true;
     EnemyMoveSpeed = 50.0f;
@@ -156,7 +157,6 @@ void AProject1BasicEnemy::Die()
     GetCharacterMovement()->bOrientRotationToMovement = true;  // 이동 방향으로 회전
     GetCharacterMovement()->bUseControllerDesiredRotation = true;  // AIController가 회전을 제어
 
-    // Set a timer to remove the enemy from the game after a delay
     GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &AProject1BasicEnemy::OnDeathFinished, TimeBeforeRemoval, false);
 }
 
