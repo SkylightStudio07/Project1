@@ -86,6 +86,9 @@ AProject1Character::AProject1Character()
     MaxWalkSpeed = 600.0f;
     MaxWalkSpeedCrouched = 300.0f;  // 웅크려서 걷기 속도 설정
 
+    AimCameraPosition = CreateDefaultSubobject<USceneComponent>(TEXT("AimCameraPosition"));
+    AimCameraPosition->SetupAttachment(RootComponent); // 또는 Weapon에 부착해도 됨
+
 }
 
 void AProject1Character::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
@@ -156,6 +159,10 @@ void AProject1Character::BeginPlay()
             }
         }
     }
+
+
+    DefaultCameraLocation = FollowCamera->GetRelativeLocation();
+    DefaultFOV = FollowCamera->FieldOfView;
 
     SetControlMode(0);
 }
@@ -310,7 +317,7 @@ void AProject1Character::SetControlMode(int32 ControlMode)
 {
     if (ControlMode == 0) // TPS
     {
-        CameraBoom->TargetArmLength = 450.0f;
+        CameraBoom->TargetArmLength = 0.0f;
         CameraBoom->SetRelativeRotation(FRotator::ZeroRotator);
         CameraBoom->bUsePawnControlRotation = true;
         CameraBoom->bInheritPitch = true;
@@ -323,6 +330,9 @@ void AProject1Character::SetControlMode(int32 ControlMode)
         bUseControllerRotationRoll = true;
         GetCharacterMovement()->bOrientRotationToMovement = false;
     }
+
+    // 하기 코드는 사용하지 않음.
+
     else if (ControlMode == 1) // FPS
     {
         CameraBoom->TargetArmLength = 0.0f;
@@ -403,8 +413,25 @@ void AProject1Character::OnRightMouseButtonPressed()
     if (PlayerAnimInstance != nullptr)
     {
 
+        bIsAiming = !bIsAiming;
+
         PlayerAnimInstance->SetIsAiming(!PlayerAnimInstance->IsAiming);
         UE_LOG(LogTemp, Warning, TEXT("IsAiming : %s"), PlayerAnimInstance->IsAiming ? TEXT("true") : TEXT("false"));
+
+        if (bIsAiming)
+        {
+            // 카메라를 Aim 위치로 보간 이동
+            FVector TargetLocation = FollowCamera->GetComponentTransform().InverseTransformPosition(AimCameraPosition->GetComponentLocation());
+            FollowCamera->SetRelativeLocation(TargetLocation);
+            FollowCamera->SetFieldOfView(AimedFOV);
+        }
+        else
+        {
+            FollowCamera->SetRelativeLocation(DefaultCameraLocation);
+            FollowCamera->SetFieldOfView(DefaultFOV);
+        }
+
+        UE_LOG(LogTemp, Warning, TEXT("IsAiming : %s"), bIsAiming ? TEXT("true") : TEXT("false"));
     }
     else {
         UE_LOG(LogTemp, Warning, TEXT("PlayerAnimInstance is Null!"));

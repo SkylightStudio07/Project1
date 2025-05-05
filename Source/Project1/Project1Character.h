@@ -42,6 +42,21 @@ public:
     void UpdateAmmoText(int32 RemainingAmmo);
     void ReloadManager();
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Aiming")
+        bool bIsAiming = false;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Aiming")
+        FVector DefaultCameraLocation;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Aiming")
+        float DefaultFOV = 90.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Aiming")
+        float AimedFOV = 65.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Aiming")
+        USceneComponent* AimCameraPosition;
+
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Fire")
         int32 Bullets;
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Fire")
